@@ -1,3 +1,5 @@
+import type { D1Database, KVNamespace, R2Bucket } from "@cloudflare/workers-types";
+
 export type CloudflareEnv = {
   DB?: D1Database;
   ASKBOX_KV?: KVNamespace;

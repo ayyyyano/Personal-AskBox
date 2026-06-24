@@ -24,7 +24,7 @@ export type Question = {
   published_at: string | null;
 };
 
-async function d1Query<T>(sql: string, params: unknown[] = []) {
+async function d1Query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
   const env = await getCloudflareEnv();
   if (env.DB) {
     const result = await env.DB.prepare(sql).bind(...params).all<T>();
@@ -70,7 +70,7 @@ export async function createQuestion(question: {
   );
 }
 
-export async function listQuestions(status?: string) {
+export async function listQuestions(status?: string): Promise<Question[]> {
   if (status && status !== "all") {
     return d1Query<Question>(
       "SELECT * FROM questions WHERE status = ? ORDER BY created_at DESC LIMIT 100",
@@ -80,7 +80,7 @@ export async function listQuestions(status?: string) {
   return d1Query<Question>("SELECT * FROM questions ORDER BY created_at DESC LIMIT 100");
 }
 
-export async function listPublishedQuestions() {
+export async function listPublishedQuestions(): Promise<Question[]> {
   return d1Query<Question>(
     "SELECT * FROM questions WHERE status = 'published' ORDER BY published_at DESC LIMIT 50"
   );

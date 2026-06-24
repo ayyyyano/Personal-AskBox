@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/next.mjs dev",
+    "build": "node scripts/next.mjs build",
     "start": "next start",
     "lint": "next lint",
     "cf:build": "opennextjs-cloudflare build",

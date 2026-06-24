@@ -392,7 +392,25 @@ Vercel 默认不支持本项目的 R2 binding 附件上传。
 
 ### 本机 Windows 构建失败
 
-如果本机执行 `npm run build` 时遇到 Next.js SWC DLL 相关错误，通常是本机原生模块加载问题。可以优先使用 GitHub、Vercel 或 Cloudflare 的 Linux 构建环境部署。
+如果本机执行 `npm run build` 时遇到 Next.js SWC DLL 相关错误，通常是 Windows 原生 SWC 模块加载问题，不是页面代码错误。项目已经在 `scripts/next.mjs` 中处理了 Windows fallback：当检测到 Windows 时，会自动使用 `@next/swc-wasm-nodejs`。
+
+如果你仍然看到 `@next/swc-wasm-nodejs was not installed`，请在项目根目录重新安装依赖：
+
+```bash
+npm install
+npm run build
+```
+
+如果仍然失败，请删除旧依赖后重装：
+
+```powershell
+Remove-Item -Recurse -Force node_modules
+Remove-Item -Force package-lock.json
+npm install
+npm run build
+```
+
+也可以安装或修复 Microsoft Visual C++ Redistributable 2015-2022 x64，因为 Next.js 的原生 SWC DLL 依赖它。
 
 类型检查可以运行：
 
