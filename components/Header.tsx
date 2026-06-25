@@ -1,7 +1,13 @@
+"use client";
 import Link from "next/link";
+import { useEffect } from "react";
 import { siteName } from "@/lib/env";
 
 export function Header({ admin = false }: { admin?: boolean }) {
+  useEffect(() => {
+    import("@mdui/icons/admin-panel-settings.js");
+  }, []);
+
   return (
     <header className="shell topbar">
       <Link href="/" className="brand">
@@ -14,7 +20,9 @@ export function Header({ admin = false }: { admin?: boolean }) {
         </form>
       ) : (
         <Link href="/admin">
-          <mdui-button-icon icon="admin_panel_settings" aria-label="管理后台" />
+          <mdui-button-icon aria-label="管理后台">
+            <mdui-icon-admin-panel-settings></mdui-icon-admin-panel-settings>
+          </mdui-button-icon>
         </Link>
       )}
     </header>
