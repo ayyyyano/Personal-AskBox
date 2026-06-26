@@ -1,6 +1,6 @@
 import { AskForm } from "@/components/AskForm";
 import { Header } from "@/components/Header";
-import { TimeDisplay } from "@/components/TimeDisplay";
+import { PublishedList } from "@/components/PublishedList";
 import { listPublishedQuestions } from "@/lib/db";
 import { getEnv, siteName } from "@/lib/env";
 
@@ -23,20 +23,7 @@ export default async function HomePage() {
             <AskForm siteKey={siteKey} />
           </aside>
         </section>
-
-        <section className="published" aria-label="公开问答">
-          <h2>最近回答</h2>
-          {questions.map((question) => (
-            <article className="question-card" key={question.id}>
-              <p>{question.content}</p>
-              {question.attachment_key ? <p><img src={`/api/questions/${question.id}/attachment`} alt="附件图片" style={{maxWidth:"100%",maxHeight:320,borderRadius:8,objectFit:"contain"}} /></p> : null}
-              <mdui-divider />
-              <p>{question.answer}</p>
-              <p className="muted">{question.nickname || "匿名"} · {question.published_at ? <TimeDisplay date={question.published_at} /> : ""}</p>
-            </article>
-          ))}
-          {!questions.length ? <p className="muted">还没有公开回答。</p> : null}
-        </section>
+        <PublishedList questions={questions} />
       </main>
     </>
   );

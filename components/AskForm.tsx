@@ -19,6 +19,13 @@ export function AskForm({ siteKey }: { siteKey: string }) {
   const [token, setToken] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const turnstileRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    import("@mdui/icons/alternate-email.js");
+    import("@mdui/icons/arrow-forward.js");
+    import("@mdui/icons/attachment.js");
+  }, []);
 
   useEffect(() => {
     if (!siteKey) return;
@@ -45,39 +52,50 @@ export function AskForm({ siteKey }: { siteKey: string }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formEl = event.currentTarget;
     setBusy(true);
     setMessage("");
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formEl);
     form.set("turnstileToken", token);
     if (file) form.set("attachment", file);
-    const response = await fetch("/api/questions", {
-      method: "POST",
-      body: form
-    });
-    setBusy(false);
-    if (response.ok) {
-      event.currentTarget.reset();
-      setFile(null);
-      setMessage("已经投递到收件箱。");
-      return;
+    try {
+      const response = await fetch("/api/questions", {
+        method: "POST",
+        body: form
+      });
+      setBusy(false);
+      if (response.ok) {
+        formEl.reset();
+        setFile(null);
+        setMessage("已经投递到收件箱。");
+        return;
+      }
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      setMessage(data?.error ?? "提交失败，请稍后再试。");
+    } catch {
+      setBusy(false);
+      setMessage("网络错误，请稍后再试。");
     }
-    const data = (await response.json().catch(() => null)) as { error?: string } | null;
-    setMessage(data?.error ?? "提交失败，请稍后再试。");
   }
 
   return (
     <form className="form-stack" onSubmit={submit}>
-      <mdui-text-field name="nickname" label="昵称（可留空）" maxlength="40" clearable />
+      <mdui-text-field name="nickname" label="昵称（可留空）" maxlength="40" clearable>
+        <mdui-icon-alternate-email slot="icon"></mdui-icon-alternate-email>
+      </mdui-text-field>
       <mdui-text-field name="content" label="想问什么？" required rows="7" maxlength="1000" counter />
-      <label style={{display:"grid",gap:4,fontSize:"var(--mdui-typescale-body-small-font-size,0.875rem)",color:"rgb(var(--mdui-color-on-surface-variant))"}}>
-        图片附件（可选）
-        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setFile(e.target.files?.[0] ?? null)} style={{color:"inherit",font:"inherit"}} />
-      </label>
-      {siteKey ? <div ref={turnstileRef} /> : null}
+      <mdui-divider></mdui-divider>
+      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setFile(e.target.files?.[0] ?? null)} hidden />
+      <mdui-button variant="outlined" full-width onClick={() => fileInputRef.current?.click()}>
+        <mdui-icon-attachment slot="icon"></mdui-icon-attachment>
+        {file ? file.name : "图片附件（可选）"}
+      </mdui-button>
+      {siteKey ? <div ref={turnstileRef} style={{display:"flex",justifyContent:"center"}} /> : null}
       <mdui-button type="submit" loading={busy || undefined} full-width>
+        <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
         发送问题
       </mdui-button>
-      {message ? <mdui-card variant="outlined">{message}</mdui-card> : null}
+      {message ? <p style={{margin:0,padding:"8px 16px",borderRadius:8,color:"rgb(var(--mdui-color-on-surface-variant))"}}>{message}</p> : null}
     </form>
   );
 }

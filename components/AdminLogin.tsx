@@ -1,9 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function AdminLogin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    import("@mdui/icons/account-circle.js");
+    import("@mdui/icons/lock.js");
+  }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,7 +30,12 @@ export function AdminLogin() {
 
   return (
     <form className="panel form-stack" onSubmit={submit}>
-      <mdui-text-field name="password" type="password" label="管理员密码" required />
+      <mdui-text-field disabled label="账号" value="Admin">
+        <mdui-icon-account-circle slot="icon"></mdui-icon-account-circle>
+      </mdui-text-field>
+      <mdui-text-field name="password" type="password" label="密码" required toggle-password>
+        <mdui-icon-lock slot="icon"></mdui-icon-lock>
+      </mdui-text-field>
       <mdui-button type="submit" loading={busy || undefined}>
         {busy ? "登录中…" : "登录"}
       </mdui-button>

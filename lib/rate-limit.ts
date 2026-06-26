@@ -1,6 +1,6 @@
 import { kvGet, kvPut } from "./kv";
 
-export async function hitRateLimit(key: string, limit = 5, windowSeconds = 3600) {
+export async function hitRateLimit(key: string, limit = 20, windowSeconds = 3600) {
   const now = Date.now();
   const raw = await kvGet(`ratelimit:${key}`);
   const state = raw ? (JSON.parse(raw) as { count: number; resetAt: number }) : null;
