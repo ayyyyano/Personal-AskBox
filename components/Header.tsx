@@ -46,9 +46,9 @@ export function Header({ admin = false }: { admin?: boolean }) {
   return (
     <header className="shell topbar">
       <Link href="/" className="brand">
-        <mdui-avatar size={40} variant="rounded">
-          <img src="/favicon.ico" alt="logo" />
-        </mdui-avatar>
+        <span className="brand-mark">
+          <img src="/favicon.ico" alt="logo" style={{width:40,height:40}} />
+        </span>
         <span>{siteName()}</span>
       </Link>
       <div style={{display:"flex",gap:4,alignItems:"center"}}>
