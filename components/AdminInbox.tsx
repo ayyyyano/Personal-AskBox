@@ -106,8 +106,8 @@ export function AdminInbox() {
             <mdui-text-field name="answer" label="回答" rows="4" required />
             <mdui-checkbox name="publish" checked>发布到首页</mdui-checkbox>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <mdui-button type="submit"><mdui-icon-check></mdui-icon-check>保存回答</mdui-button>
-              <mdui-button type="button" onClick={() => setDeleteId(question.id)}><mdui-icon-delete></mdui-icon-delete>删除问题</mdui-button>
+              <mdui-button type="submit"><mdui-icon-check slot="icon"></mdui-icon-check>保存回答</mdui-button>
+              <mdui-button type="button" onClick={() => setDeleteId(question.id)}><mdui-icon-delete slot="icon"></mdui-icon-delete>删除问题</mdui-button>
             </div>
           </form>
         </article>
