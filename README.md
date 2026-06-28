@@ -103,7 +103,26 @@ npm run cf:deploy
 
 搜索功能依赖 [Algolia](https://www.algolia.com/)，免费额度（10,000 条记录 / 10,000 次搜索/月）对个人使用完全足够。**不配置也不影响其他功能**，搜索栏会自动降级为空。
 
-### 1. 注册 Algolia 并获取密钥
+### 方式一：Agent 快速配置
+
+在项目根目录向 Agent 发送：
+
+```
+配置 Algolia 搜索，我的 Application ID 是 XXX，
+Search-Only API Key 是 XXX，
+Admin API Key 是 XXX，
+Index 名称是 askbox。
+```
+
+Agent 会自动完成：
+1. 在 `.env.local` 中添加四项 Algolia 环境变量
+2. 更新 `wrangler.jsonc` 的 `vars` 中添加三项公开变量
+3. 通过 `wrangler secret put` 设置 `ALGOLIA_ADMIN_API_KEY`
+4. 执行 `npm run cf:deploy` 重新部署
+
+你也可以在同一句话里指定其他的 Index 名称。
+
+### 方式二：手动配置
 
 1. 前往 [algolia.com](https://www.algolia.com/) 注册账号
 2. 进入 Dashboard → Settings → API Keys
@@ -112,11 +131,11 @@ npm run cf:deploy
    - **Search-Only API Key**（公开，前端用）
    - **Admin API Key**（保密，后端用）
 
-### 2. 创建 Index
+#### 2. 创建 Index
 
 进入 Dashboard → Search → Index → Create Index，命名为 `askbox`（或其他你喜欢的名字）。
 
-### 3. 配置环境变量
+#### 3. 配置环境变量
 
 在 `.env.local` 中添加：
 
@@ -127,7 +146,7 @@ NEXT_PUBLIC_ALGOLIA_INDEX="askbox"
 ALGOLIA_ADMIN_API_KEY="你的 Admin API Key"
 ```
 
-### 4. 更新 wrangler.jsonc
+#### 4. 更新 wrangler.jsonc
 
 在 `wrangler.jsonc` 的 `vars` 中添加三项公开变量（Admin Key 通过 secret 设置，**不要写进文件**）：
 
@@ -141,13 +160,13 @@ ALGOLIA_ADMIN_API_KEY="你的 Admin API Key"
 }
 ```
 
-### 5. 设置 Admin API Key 为 Secret
+#### 5. 设置 Admin API Key 为 Secret
 
 ```bash
 echo '你的 Admin API Key' | npx wrangler secret put ALGOLIA_ADMIN_API_KEY
 ```
 
-### 6. 配置 Index 搜索属性（推荐）
+#### 6. 配置 Index 搜索属性（推荐）
 
 在 Algolia Dashboard → Search → Index → `askbox` → Configuration → Searchable attributes 中，添加：
 
@@ -157,7 +176,7 @@ content, answer, nickname
 
 这样搜索只会匹配问题内容、回答和昵称，结果更准确。
 
-### 7. 重新部署
+#### 7. 重新部署
 
 ```bash
 npm run cf:deploy
