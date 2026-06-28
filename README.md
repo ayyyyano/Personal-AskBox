@@ -13,27 +13,23 @@
 - Next.js App Router
 - MDUI 2
 - Cloudflare D1 / KV / R2 / Turnstile / Workers
+- Algolia（可选搜索）
 
 ## 快速部署（使用 Agent）
 
 本项目可用 [OpenCode](https://opencode.ai) 等 Agent 工具一键完成部署。在项目根目录向 Agent 发送：
 
 ```
-复制 .env.example 为 .env.local，SESSION_SECRET 随机生成，ADMIN_PASSWORD 设为你的密码。
-创建项目所需的 Cloudflare 资源（D1、KV、R2）。
-初始化数据库。
-部署到 Cloudflare Workers。
+复制 .env.example 为 .env.local，将 SESSION_SECRET 设为随机字符串，ADMIN_PASSWORD 设为你的密码。
+创建项目所需的 Cloudflare 资源（D1、KV、R2）并更新 wrangler.jsonc 中的资源 ID。
+初始化 D1 数据库。
+通过 wrangler secret put 设置 SESSION_SECRET、ADMIN_PASSWORD、TURNSTILE_SECRET_KEY 生产密钥。
+最后执行 npm run cf:deploy 部署到 Cloudflare Workers。
 ```
 
-Agent 会自动完成：
-1. 复制环境变量模板并填入随机密钥
-2. 调用 `wrangler` 创建 D1 数据库、KV 命名空间、R2 存储桶
-3. 更新 `wrangler.jsonc` 中的资源 ID
-4. 初始化本地和远端数据库
-5. 通过 `wrangler secret put` 设置生产密钥
-6. 执行 `npm run cf:deploy` 构建并部署
+Agent 会自动完成以上步骤。部署完成后访问终端输出的 `workers.dev` 或自定义域名即可使用。
 
-部署完成后访问终端输出的 `workers.dev` 网址即可使用。
+> **搜索功能（可选）** 需要额外的 Algolia 配置，详见下方 [Algolia 搜索配置](#algolia-搜索配置可选)。
 
 ## 手动部署
 
@@ -58,8 +54,6 @@ ADMIN_PASSWORD="你的管理员密码"
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=""
 TURNSTILE_SECRET_KEY=""
 ```
-
-> 开发模式 Turnstile 可留空；生产环境请务必在 Cloudflare Dashboard 创建 Turnstile widget 并填入密钥。
 
 ### 2. 创建 Cloudflare 资源
 
@@ -86,6 +80,8 @@ echo '你的ADMIN_PASSWORD' | npx wrangler secret put ADMIN_PASSWORD
 echo '你的TURNSTILE_SECRET_KEY' | npx wrangler secret put TURNSTILE_SECRET_KEY
 ```
 
+> 开发模式 Turnstile 可留空；生产环境请务必在 Cloudflare Dashboard 创建 Turnstile widget 并填入密钥。
+
 ### 5. 构建并部署
 
 ```bash
@@ -97,15 +93,77 @@ npm run cf:deploy
 ## 功能特性
 
 - **匿名提问**：支持公开昵称或匿名留言，可附带图片附件（PNG/JPG/WebP/GIF）
+- **全文搜索**：基于 Algolia 的实时搜索，前台搜公开问题，后台搜全部（**可选功能**，见下方配置）
 - **人机验证**：集成 Cloudflare Turnstile 验证，防止垃圾提交
 - **深色模式**：顶部按钮一键切换浅色/深色/跟随系统，选择自动持久化
 - **管理后台**：按状态分类（待回答/已回答/已展示/全部），支持按问题回答并选择公开
 - **限速保护**：同一 IP 每小时最多提交 **20** 个问题，超出限制返回提示
 
-### 计划中
+## Algolia 搜索配置（可选）
 
-- 前/后台问题搜索
-- 后台问题删除
+搜索功能依赖 [Algolia](https://www.algolia.com/)，免费额度（10,000 条记录 / 10,000 次搜索/月）对个人使用完全足够。**不配置也不影响其他功能**，搜索栏会自动降级为空。
+
+### 1. 注册 Algolia 并获取密钥
+
+1. 前往 [algolia.com](https://www.algolia.com/) 注册账号
+2. 进入 Dashboard → Settings → API Keys
+3. 记录以下三个值：
+   - **Application ID**
+   - **Search-Only API Key**（公开，前端用）
+   - **Admin API Key**（保密，后端用）
+
+### 2. 创建 Index
+
+进入 Dashboard → Search → Index → Create Index，命名为 `askbox`（或其他你喜欢的名字）。
+
+### 3. 配置环境变量
+
+在 `.env.local` 中添加：
+
+```env
+NEXT_PUBLIC_ALGOLIA_APP_ID="你的 Application ID"
+NEXT_PUBLIC_ALGOLIA_SEARCH_ONLY_API_KEY="你的 Search-Only API Key"
+NEXT_PUBLIC_ALGOLIA_INDEX="askbox"
+ALGOLIA_ADMIN_API_KEY="你的 Admin API Key"
+```
+
+### 4. 更新 wrangler.jsonc
+
+在 `wrangler.jsonc` 的 `vars` 中添加三项公开变量（Admin Key 通过 secret 设置，**不要写进文件**）：
+
+```json
+{
+  "vars": {
+    "NEXT_PUBLIC_ALGOLIA_APP_ID": "你的 Application ID",
+    "NEXT_PUBLIC_ALGOLIA_SEARCH_ONLY_API_KEY": "你的 Search-Only API Key",
+    "NEXT_PUBLIC_ALGOLIA_INDEX": "askbox"
+  }
+}
+```
+
+### 5. 设置 Admin API Key 为 Secret
+
+```bash
+echo '你的 Admin API Key' | npx wrangler secret put ALGOLIA_ADMIN_API_KEY
+```
+
+### 6. 配置 Index 搜索属性（推荐）
+
+在 Algolia Dashboard → Search → Index → `askbox` → Configuration → Searchable attributes 中，添加：
+
+```
+content, answer, nickname
+```
+
+这样搜索只会匹配问题内容、回答和昵称，结果更准确。
+
+### 7. 重新部署
+
+```bash
+npm run cf:deploy
+```
+
+部署后，新提交的问题会自动索引到 Algolia。已有数据不会自动同步，需重新提交或通过脚本导入。
 
 ## 管理后台
 
@@ -145,6 +203,13 @@ npm run db:remote  # 初始化远端 D1
 ### 部署后首页没有公开内容
 
 正常。问题提交后进入后台收件箱，需要管理员回答并发布后才会显示。
+
+### 搜索没有结果
+
+- 确认已按上方步骤完成 Algolia 配置
+- 确认 `ALGOLIA_ADMIN_API_KEY` 已设置为 secret
+- 确认 Index 名称与 `NEXT_PUBLIC_ALGOLIA_INDEX` 一致
+- 新提交的问题才会自动同步，旧数据不会自动导入
 
 ### Windows 构建失败
 
