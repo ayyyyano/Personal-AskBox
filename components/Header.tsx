@@ -121,7 +121,7 @@ export function Header({ admin = false }: { admin?: boolean }) {
       </div>
 
       <mdui-dialog ref={dialogRef} open={searchOpen || undefined} headline="搜索问题">
-        <mdui-text-field ref={searchFieldRef} value={searchQuery} placeholder="输入关键词…" helper="由 Algolia 提供搜索" autofocus>
+        <mdui-text-field ref={searchFieldRef} value={searchQuery} placeholder="输入关键词…" variant="outlined" clearable helper="由 Algolia 提供搜索" autofocus>
           <mdui-icon-search slot="icon"></mdui-icon-search>
         </mdui-text-field>
         {searchBusy ? (
