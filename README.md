@@ -8,6 +8,8 @@
 |--------|----------|----------|
 | ![主页](screenshots/主页.png) | ![管理后台](screenshots/管理后台.png) | ![搜索页面](screenshots/搜索页面.png) |
 
+**DEMO:** https://askbox.nekro.top/
+
 ## 技术栈
 
 - Next.js App Router
@@ -212,6 +214,14 @@ npm run db:remote  # 初始化远端 D1
 ## 法律与隐私
 
 页脚提供 **用户协议** 与 **隐私政策** 入口，以对话框形式展示，也可通过 `/terms` 和 `/privacy` 直接访问。
+
+## 许可协议
+
+本项目遵循 **MIT license** 开源协议，详细查看 [LICENSE](LICENSE) 文件。
+
+> Copyright (c) 2026 Nekro
+
+根据 MIT 开源协议，你可以自由使用、修改、分发代码，但需保留上述版权声明。
 
 ## 常见问题
 
