@@ -88,7 +88,7 @@ export function AdminInbox() {
       </div>
 
       {questions.map((question) => (
-        <article className="admin-card" key={question.id}>
+        <mdui-card className="admin-card" variant="elevated" key={question.id}>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <strong>{question.nickname || "匿名"}</strong>
             <span className="muted">{new Date(question.created_at?.replace(" ", "T") + "Z").toLocaleString()}</span>
@@ -110,7 +110,7 @@ export function AdminInbox() {
               <mdui-button type="button" onClick={() => setDeleteId(question.id)}><mdui-icon-delete slot="icon"></mdui-icon-delete>删除问题</mdui-button>
             </div>
           </form>
-        </article>
+        </mdui-card>
       ))}
 
       {!questions.length && !busy ? <p className="muted">这里暂时没有问题。</p> : null}

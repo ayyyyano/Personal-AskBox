@@ -20,9 +20,9 @@ export default async function HomePage() {
               匿名也可以认真提问。把想问的、想说的、想确认的事放进来，我会在后台挑选回答，公开内容只显示已经发布的问答。
             </p>
           </div>
-          <aside className="panel">
+          <mdui-card className="panel" variant="elevated">
             <AskForm siteKey={siteKey} />
-          </aside>
+          </mdui-card>
         </section>
         <PublishedList questions={questions} />
       </main>
