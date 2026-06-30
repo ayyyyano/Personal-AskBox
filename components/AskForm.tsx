@@ -90,7 +90,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
 
   return (
     <form className="form-stack" onSubmit={submit}>
-      <mdui-text-field name="nickname" label="昵称（可留空）" maxlength="40" clearable>
+      <mdui-text-field name="nickname" label="昵称（可留空）" maxlength="40" variant="outlined" clearable>
         <mdui-icon-alternate-email slot="icon"></mdui-icon-alternate-email>
       </mdui-text-field>
       <mdui-text-field name="content" label="想问什么？" required rows="7" maxlength="1000" counter />
