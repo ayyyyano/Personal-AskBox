@@ -103,7 +103,7 @@ export function AdminInbox() {
               answer(question.id, event.currentTarget);
             }}
           >
-            <mdui-text-field name="answer" label="回答" rows="4" required />
+            <mdui-text-field name="answer" label="回答" variant="outlined" rows="4" required />
             <mdui-checkbox name="publish" checked>发布到首页</mdui-checkbox>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <mdui-button type="submit"><mdui-icon-check slot="icon"></mdui-icon-check>保存回答</mdui-button>
