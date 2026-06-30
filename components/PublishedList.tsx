@@ -17,7 +17,8 @@ export function PublishedList({ questions }: { questions: Question[] }) {
   useEffect(() => {
     if (!snackMessage) return;
     const el = snackRef.current;
-    if (el && "show" in el) (el as any).show();
+    if (!el) return;
+    (el as any).open = true;
   }, [snackMessage]);
 
   async function copyCard(question: Question) {
@@ -50,7 +51,7 @@ export function PublishedList({ questions }: { questions: Question[] }) {
         </mdui-card>
       ))}
       {!questions.length ? <p className="muted">还没有公开回答。</p> : null}
-      <mdui-snackbar ref={snackRef} message={snackMessage} />
+      <mdui-snackbar ref={snackRef}>{snackMessage}</mdui-snackbar>
     </section>
   );
 }
