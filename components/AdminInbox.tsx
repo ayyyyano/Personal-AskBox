@@ -88,7 +88,7 @@ export function AdminInbox() {
       </div>
 
       {questions.map((question) => (
-        <mdui-card className="admin-card" variant="filled" key={question.id}>
+        <mdui-card className="admin-card" variant="elevated" key={question.id}>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <strong>{question.nickname || "匿名"}</strong>
             <span className="muted">{new Date(question.created_at?.replace(" ", "T") + "Z").toLocaleString()}</span>

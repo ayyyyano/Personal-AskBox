@@ -29,7 +29,7 @@ export function AdminLogin() {
   }
 
   return (
-    <mdui-card className="panel" variant="filled">
+    <mdui-card className="panel" variant="elevated">
     <form className="form-stack" onSubmit={submit}>
       <mdui-text-field disabled label="账号" value="Admin">
         <mdui-icon-account-circle slot="icon"></mdui-icon-account-circle>
