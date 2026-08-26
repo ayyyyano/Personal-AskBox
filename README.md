@@ -4,9 +4,9 @@
 
 ## 预览
 
-| 主页 | 管理后台 | 搜索页面 |
+| 提问页 | 管理后台 | 搜索页面 |
 |--------|----------|----------|
-| ![主页](screenshots/主页.png) | ![管理后台](screenshots/管理后台.png) | ![搜索页面](screenshots/搜索页面.png) |
+| ![提问页](screenshots/主页.png) | ![管理后台](screenshots/管理后台.png) | ![搜索页面](screenshots/搜索页面.png) |
 
 **DEMO:** https://askbox.nekro.top/
 
@@ -29,7 +29,7 @@
 最后执行 npm run cf:deploy 部署到 Cloudflare Workers。
 ```
 
-Agent 会自动完成以上步骤。部署完成后访问终端输出的 `workers.dev` 或自定义域名即可使用。
+Agent 会自动完成以上步骤。当前 `cf:deploy` 脚本固定使用 `askbox.nekro.top` 自定义域名；如需部署到自己的域名或使用 `workers.dev`，请先调整 `package.json` 中的部署脚本。
 
 > **搜索功能（可选）** 需要额外的 Algolia 配置，详见下方 [Algolia 搜索配置](#algolia-搜索配置可选)。
 
@@ -51,11 +51,15 @@ cp .env.example .env.local
 
 ```env
 SITE_NAME="个人提问箱"
+# 当前版本的站点名称请在 /admin/settings 中修改；此变量为旧版本遗留配置
 SESSION_SECRET="换成一段很长的随机字符串"
-ADMIN_PASSWORD="你的管理员密码"
+# 本地测试可使用 admin；实际部署前必须替换为自定义强密码
+ADMIN_PASSWORD="admin"
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=""
 TURNSTILE_SECRET_KEY=""
 ```
+
+本地开发时，如果没有配置 `ADMIN_PASSWORD`，管理员登录也会使用初始密码 **`admin`**。访问 `/admin` 即可测试登录流程。实际部署时请务必设置自定义强密码，不能使用此默认密码。
 
 ### 2. 创建 Cloudflare 资源
 
@@ -98,14 +102,36 @@ npm run cf:deploy
 - **全文搜索**：基于 Algolia 的实时搜索，前台搜公开问题，后台搜全部（**可选功能**，见下方配置）
 - **人机验证**：集成 Cloudflare Turnstile 验证，防止垃圾提交
 - **深色模式**：顶部按钮一键切换浅色/深色/跟随系统，选择自动持久化
-- **管理后台**：按状态分类（待回答/已回答/已展示/全部），支持回答、发布、删除问题，关联附件同步清理
+- **响应式导航与页面过渡**：桌面端使用左侧导航栏，移动端使用底部导航栏，站内页面切换采用客户端过渡动画，并尊重系统减少动态效果设置
+- **管理后台**：登录后从后台主页进入问题列表和自定义设置；问题列表按状态分类（待回答/已回答/已展示/全部），支持回答、发布、删除问题，关联附件同步清理
 - **限速保护**：同一 IP 每小时最多提交 **20** 个问题，超出限制返回提示
 - **Markdown 支持**：问题和回答均支持 Markdown 语法，含加粗、斜体、链接、列表等，自动渲染为规范格式
-- **快速复制**：点击首页问答卡片一键复制问答内容，Snackbar 提示已复制
+- **快速复制**：点击公开展示页问答卡片一键复制问答内容，Snackbar 提示已复制
+- **自定义站点外观与文案**：管理员可修改站点名称、提问页标题、展示页标题、后台登录页标题、主题色、favicon、背景图片和页脚版权名称
+- **自定义 404 页面**：不存在的路径显示统一风格页面，并提供返回提问页入口
+
+## 页面与路由
+
+| 路径 | 用途 | 访问权限 |
+|------|------|----------|
+| `/` | 自动重定向到 `/ask` | 公开 |
+| `/ask` | 匿名提问、填写昵称、Markdown 和图片附件 | 公开 |
+| `/display` | 查看已回答并公开的问题 | 公开 |
+| `/search?q=关键词` | 搜索已公开的问题 | 公开 |
+| `/admin` | 管理员登录；登录后进入后台主页 | 登录后显示管理菜单 |
+| `/admin/questions` | 查看、回答、发布或删除问题 | 需要管理员登录 |
+| `/admin/settings` | 修改站点信息、页面标题和视觉设置 | 需要管理员登录 |
+| `/terms` | 查看用户协议 | 公开 |
+| `/privacy` | 查看隐私政策 | 公开 |
+| 其他不存在路径 | 自定义 404 页面 | 公开 |
+
+管理后台和公共页面共用“提问、展示、管理”主导航。后台主页另提供“问题列表”和“自定义设置”入口。
 
 ## Algolia 搜索配置（可选）
 
 搜索功能依赖 [Algolia](https://www.algolia.com/)，免费额度（10,000 条记录 / 10,000 次搜索/月）对个人使用完全足够。**不配置也不影响其他功能**，搜索栏会自动降级为空。
+
+顶部搜索按钮会打开搜索对话框，`/search?q=关键词` 也提供独立搜索页面。公共页面和独立搜索页只返回已公开的问题；管理员登录后，后台页面顶部搜索对话框可以搜索全部状态的问题。公共导航中没有单独的搜索导航项。
 
 ### 方式一：Agent 快速配置
 
@@ -190,15 +216,36 @@ npm run cf:deploy
 
 ## 管理后台
 
-访问 `https://你的域名/admin`，使用 `ADMIN_PASSWORD` 登录。可查看待回答问题、填写回答并选择是否发布到首页。
+访问 `https://你的域名/admin`，使用 `ADMIN_PASSWORD` 登录。登录后可从后台主页进入问题列表，填写回答并选择是否发布到公开展示页。
+
+进入 `/admin/settings` 可以通过列表逐项配置：
+
+- 站点名称
+- 提问页、展示页和后台登录页标题
+- 全局页面主题色
+- 主页面头像（favicon）上传与更换
+- 全局背景图片上传、替换与清除
+- 页脚版权名称
+- 还原默认配置
+
+站点名称和页脚版权名称最多 80 个字符；三个页面标题最多 120 个字符；主题色必须为 `#RRGGBB` 格式。favicon 支持 PNG、JPG、WebP、ICO，最大 1MB；背景图片支持 PNG、JPG、WebP，最大 4MB。还原默认配置会重置以上文字和视觉设置，并删除已上传的 favicon、背景图片，但不会删除问题数据。
+
+头像和背景图片使用现有 `ASKBOX_R2` 绑定，分别保存到 `site-assets/favicon/` 和 `site-assets/background/`，不需要创建新的 R2 bucket。设置记录保存于 D1 的 `site_settings` 表。
+
+站点名称当前以 D1 中的设置为准，`SITE_NAME` 是旧版本遗留环境变量，不再控制运行时页面名称。已有部署如曾通过 `SITE_NAME` 设置过自定义名称，需要在 `/admin/settings` 中重新保存。用户协议和隐私政策中的站点名称来自设置，网址根据当前访问域名生成，不需要额外配置 `SITE_URL`。
 
 ## 本地运行
 
 ```bash
 npm run dev
 # http://localhost:3000
+# http://localhost:3000/ask
+# http://localhost:3000/display
+# http://localhost:3000/search?q=关键词
 # http://localhost:3000/admin
 ```
+
+根路径 `/` 会自动跳转到 `/ask`。本地开发时，`http://localhost` 可以正常使用登录 Cookie；生产环境后台应通过 HTTPS 访问。
 
 ## 项目命令
 
@@ -212,9 +259,25 @@ npm run db:local   # 初始化本地 D1
 npm run db:remote  # 初始化远端 D1
 ```
 
+如果数据库已经存在，请在部署设置功能前执行一次完整 schema 初始化（命令使用 `INSERT OR IGNORE`，不会覆盖已有设置）：
+
+```bash
+npm run db:local
+npm run db:remote
+```
+
+后续版本化迁移可使用：
+
+```bash
+npm run db:migrate:local
+npm run db:migrate:remote
+```
+
+当前仓库尚未提供 `migrations/` 或 `db/migrations/` 下的版本化 SQL 文件，`db:migrate:*` 暂不能替代完整 schema 初始化。`db:local` 只更新本地 D1，`db:remote` 才会更新 Cloudflare 远端 D1。设置功能使用前必须确认目标环境已存在 `site_settings` 表；初始化不会删除问题数据，也不会创建新的 Cloudflare 资源。
+
 ## 法律与隐私
 
-页脚提供 **用户协议** 与 **隐私政策** 入口，以对话框形式展示，也可通过 `/terms` 和 `/privacy` 直接访问。
+公共页面页脚提供 **用户协议** 与 **隐私政策** 入口，以对话框形式展示，也可通过 `/terms` 和 `/privacy` 直接访问。管理后台不显示公共页脚。法律文本中的站点名称来自 `/admin/settings`，网址根据当前访问域名动态生成；部署在反向代理后时，请确保正确转发 Host 和协议头。
 
 ## 许可协议
 
@@ -233,11 +296,12 @@ npm run db:remote  # 初始化远端 D1
 ### 后台无法登录
 
 - 检查 `ADMIN_PASSWORD` 和 `SESSION_SECRET` 是否已通过 `wrangler secret` 设置。
-- 使用 `http://` 而非 `https://` 访问会导致 Cookie 无法写入，请务必通过 `https://` 访问后台。
+- 本地开发默认密码为 `admin`；生产环境不会启用未配置密码时的默认回退。
+- 生产环境后台应通过 HTTPS 访问；本地开发的 `http://localhost` 可以正常使用登录 Cookie。
 
-### 部署后首页没有公开内容
+### 部署后展示页没有公开内容
 
-正常。问题提交后进入后台收件箱，需要管理员回答并发布后才会显示。
+正常。问题提交后进入后台收件箱，需要管理员回答并发布后才会显示在 `/display` 展示页。
 
 ### 搜索没有结果
 

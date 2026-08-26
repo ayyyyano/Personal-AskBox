@@ -4,6 +4,7 @@ import { getEnv } from "./env";
 import { decodeJson, encodeJson, hmacSign, sha256Hex } from "./crypto";
 
 const cookieName = "askbox_session";
+const localDefaultAdminPassword = "admin";
 
 type SessionPayload = {
   role: "admin";
@@ -21,7 +22,11 @@ export async function verifyPassword(password: string) {
   if (expectedHash) {
     return (await sha256Hex(password)) === expectedHash;
   }
-  return password === (env.ADMIN_PASSWORD ?? getEnv("ADMIN_PASSWORD", "admin"));
+  const configuredPassword = env.ADMIN_PASSWORD ?? getEnv("ADMIN_PASSWORD");
+  if (configuredPassword) return password === configuredPassword;
+
+  // 只在本地开发时提供便于体验的默认密码，生产环境未配置密码时拒绝登录。
+  return process.env.NODE_ENV === "development" && password === localDefaultAdminPassword;
 }
 
 export async function createSessionCookie() {

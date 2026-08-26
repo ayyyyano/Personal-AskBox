@@ -29,5 +29,6 @@ export async function searchQuestions(query: string, filters?: string) {
   const results = await c.search<SearchResult>({
     requests: [{ indexName: INDEX_NAME, query, filters, hitsPerPage: 20 }],
   });
-  return { hits: (results.results[0] as any)?.hits ?? ([] as SearchResult[]) };
+  const firstResult = results.results[0] as { hits?: SearchResult[] } | undefined;
+  return { hits: firstResult?.hits ?? [] };
 }

@@ -1,34 +1,29 @@
-import { redirect } from "next/navigation";
-import { AdminInbox } from "@/components/AdminInbox";
+import { AdminMenu } from "@/components/AdminMenu";
 import { AdminLogin } from "@/components/AdminLogin";
-import { Header } from "@/components/Header";
 import { isAdmin } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export default async function AdminPage() {
   const ok = await isAdmin();
   if (!ok) {
+    const settings = await getSiteSettings();
     return (
-      <>
-        <Header />
-        <main className="shell">
-          <section className="hero">
-            <div>
-              <h1 className="headline">管理后台</h1>
-              <p className="lede">登录后查看匿名问题并发布回答。</p>
-            </div>
-            <AdminLogin />
-          </section>
-        </main>
-      </>
+      <main className="shell page-main admin-content split-page">
+        <section className="page-intro admin-page-intro">
+          <p className="eyebrow">管理后台</p>
+          <h1 className="page-title">{settings.adminLoginTitle}</h1>
+          <p className="lede">登录后查看收到的问题，并管理公开展示内容。</p>
+        </section>
+        <div className="admin-login-card">
+          <AdminLogin />
+        </div>
+      </main>
     );
   }
 
   return (
-    <>
-      <Header admin />
-      <main className="shell">
-        <AdminInbox />
-      </main>
-    </>
+    <main className="shell page-main admin-content">
+      <AdminMenu />
+    </main>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { searchQuestions, type SearchResult } from "@/lib/algolia";
 import { useSearchParams, useRouter } from "next/navigation";
 import { TimeDisplay } from "@/components/TimeDisplay";
@@ -27,7 +27,7 @@ export function SearchView() {
     setBusy(true);
     setSearched(true);
     try {
-      const { hits } = await searchQuestions(q);
+      const { hits } = await searchQuestions(q, "status:published");
       setResults(hits);
     } catch (err) {
       console.error("Search failed:", err);
@@ -40,19 +40,24 @@ export function SearchView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const searchTimer = useRef<number | undefined>(undefined);
+
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    window.clearTimeout((onChange as any)._t);
-    (onChange as any)._t = window.setTimeout(() => {
+    if (searchTimer.current !== undefined) window.clearTimeout(searchTimer.current);
+    searchTimer.current = window.setTimeout(() => {
       doSearch(value);
       router.replace(`/search?q=${encodeURIComponent(value)}`);
     }, 300);
   };
 
   return (
-    <main className="shell" style={{ paddingTop: 32, paddingBottom: 64 }}>
-      <h1 style={{ fontSize: "2rem", margin: "0 0 24px" }}>搜索问题</h1>
+    <main className="shell page-main search-page">
+      <section className="page-intro">
+        <p className="eyebrow">公开搜索</p>
+        <h1 className="page-title">搜索问题</h1>
+      </section>
       <input
         type="text"
         value={query}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdmin } from "@/lib/auth";
 import { getCloudflareEnv } from "@/lib/cloudflare";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -11,7 +12,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   if (!db) {
     return NextResponse.json({ error: "DB not configured" }, { status: 500 });
   }
-  const result = await db.prepare("SELECT attachment_key FROM questions WHERE id = ?").bind(id).first<{ attachment_key: string | null }>();
+  const admin = await isAdmin();
+  const result = admin
+    ? await db.prepare("SELECT attachment_key FROM questions WHERE id = ?").bind(id).first<{ attachment_key: string | null }>()
+    : await db.prepare("SELECT attachment_key FROM questions WHERE id = ? AND status = 'published'").bind(id).first<{ attachment_key: string | null }>();
   if (!result?.attachment_key) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

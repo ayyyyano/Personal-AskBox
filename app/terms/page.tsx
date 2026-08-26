@@ -1,11 +1,15 @@
 import { TermsContent, LAST_UPDATED } from "@/components/Legal";
+import { getSiteSettings } from "@/lib/site-settings";
+import { getSiteUrl } from "@/lib/site-url";
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const [settings, siteUrl] = await Promise.all([getSiteSettings(), getSiteUrl()]);
+
   return (
-    <main className="shell" style={{ padding: "32px 0 64px", maxWidth: 800, lineHeight: 1.8 }}>
+    <main className="shell legal-page">
       <h1>用户协议</h1>
-      <p style={{ color: "rgb(var(--mdui-color-on-surface-variant))" }}>最后更新日期：{LAST_UPDATED}</p>
-      <TermsContent />
+      <p className="muted">最后更新日期：{LAST_UPDATED}</p>
+      <TermsContent siteName={settings.siteName} siteUrl={siteUrl} />
     </main>
   );
 }

@@ -1,6 +1,6 @@
 {
   "name": "personal-askbox",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,9 @@
     "cf:preview": "opennextjs-cloudflare build && wrangler dev",
     "cf:deploy": "opennextjs-cloudflare build && wrangler deploy --domain askbox.nekro.top",
     "db:local": "wrangler d1 execute askbox-db --local --file=./db/schema.sql",
-    "db:remote": "wrangler d1 execute askbox-db --remote --file=./db/schema.sql"
+    "db:remote": "wrangler d1 execute askbox-db --remote --file=./db/schema.sql",
+    "db:migrate:local": "wrangler d1 migrations apply askbox-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply askbox-db --remote"
   },
   "dependencies": {
     "@cloudflare/workers-types": "4.20260620.1",

@@ -1,7 +1,12 @@
-export function TermsContent() {
+type LegalContentProps = {
+  siteName: string;
+  siteUrl: string;
+};
+
+export function TermsContent({ siteName, siteUrl }: LegalContentProps) {
   return (
     <>
-      <p>欢迎使用 Personal-AskBox（以下简称"本服务"），网址为 askbox.nekro.top。</p>
+      <p>欢迎使用 {siteName}（以下简称"本服务"），网址为 {siteUrl}。</p>
       <p>本服务为个人匿名提问平台，允许用户向网站管理者提交问题、留言或消息。当您访问或使用本服务时，即表示您已阅读、理解并同意遵守本协议之全部内容。</p>
 
       <h2>一、服务内容</h2>
@@ -59,10 +64,10 @@ export function TermsContent() {
   );
 }
 
-export function PrivacyContent() {
+export function PrivacyContent({ siteName, siteUrl }: LegalContentProps) {
   return (
     <>
-      <p>Personal-AskBox（网址：askbox.nekro.top，以下简称"本服务"）重视用户隐私。本政策说明本服务收集、使用及保护信息的方式。使用本服务即表示同意本政策内容。</p>
+      <p>{siteName}（网址：{siteUrl}，以下简称"本服务"）重视用户隐私。本政策说明本服务收集、使用及保护信息的方式。使用本服务即表示同意本政策内容。</p>
 
       <h2>一、我们收集的信息</h2>
       <h3>1.1 用户主动提供的信息</h3>

@@ -22,7 +22,7 @@ export function PublishedList({ questions }: { questions: Question[] }) {
     if (!snackMessage) return;
     const el = snackRef.current;
     if (!el) return;
-    (el as any).open = true;
+    (el as HTMLElement & { open?: boolean }).open = true;
   }, [snackMessage]);
 
   async function copyCard(question: Question) {
@@ -33,7 +33,6 @@ export function PublishedList({ questions }: { questions: Question[] }) {
 
   return (
     <section className="published" aria-label="公开问答">
-      <h2>最近回答</h2>
       {questions.map((question) => (
         <mdui-card
           className="question-card"
