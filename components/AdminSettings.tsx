@@ -28,6 +28,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const feedbackRef = useRef<HTMLElement>(null);
+  const hasUnsavedChanges = siteName !== settings.siteName || askTitle !== settings.askTitle || displayTitle !== settings.displayTitle || adminLoginTitle !== settings.adminLoginTitle || primaryColor !== settings.primaryColor || copyrightName !== settings.copyrightName || topBarOpacity !== settings.topBarOpacity || navigationOpacity !== settings.navigationOpacity || cardOpacity !== settings.cardOpacity || backgroundOpacity !== settings.backgroundOpacity;
 
   useEffect(() => {
     const el = feedbackRef.current;
@@ -119,7 +120,18 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
         <p className="lede">逐项调整公开页面的外观和署名。修改会应用到前台与管理后台。</p>
       </header>
 
+      <nav className="settings-nav" aria-label="设置分组">
+        <a href="#settings-content">基础内容</a>
+        <a href="#settings-appearance">主题与透明度</a>
+        <a href="#settings-assets">图片资源</a>
+        <a href="#settings-other">其他设置</a>
+      </nav>
+      <p className={`settings-save-state${hasUnsavedChanges ? " is-dirty" : ""}`} role="status">
+        {hasUnsavedChanges ? "有未保存的修改" : "设置已保存"}
+      </p>
+
       <div className="settings-list">
+        <h2 id="settings-content" className="settings-section-title">基础内容</h2>
         <mdui-card className="settings-card" variant="outlined">
           <div className="settings-item-content">
             <div className="settings-item-heading">
@@ -139,7 +151,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 maxlength="80"
                 onInput={(event) => setSiteName((event.target as HTMLInputElement | null)?.value ?? "")}
               />
-              <mdui-button type="button" variant="tonal" loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
                 <mdui-icon-save slot="icon"></mdui-icon-save>
                 保存
               </mdui-button>
@@ -147,6 +159,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
           </div>
         </mdui-card>
 
+        <h2 id="settings-appearance" className="settings-section-title">主题与透明度</h2>
         <mdui-card className="settings-card" variant="outlined">
           <div className="settings-item-content">
             <div className="settings-item-heading">
@@ -169,7 +182,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 </label>
               ))}
             </div>
-            <mdui-button type="button" variant="tonal" loading={busy === "update" || undefined} onClick={() => submit("update")}>
+            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
               <mdui-icon-save slot="icon"></mdui-icon-save>
               保存透明度
             </mdui-button>
@@ -211,7 +224,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 onInput={(event) => setAdminLoginTitle((event.target as HTMLInputElement | null)?.value ?? "")}
               />
             </div>
-            <mdui-button type="button" variant="tonal" loading={busy === "update" || undefined} onClick={() => submit("update")}>
+            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
               <mdui-icon-save slot="icon"></mdui-icon-save>
               保存标题
             </mdui-button>
@@ -242,7 +255,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 maxlength="7"
                 onInput={(event) => setPrimaryColor(((event.target as HTMLInputElement | null)?.value ?? "").toUpperCase())}
               />
-              <mdui-button type="button" variant="tonal" loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
                 <mdui-icon-save slot="icon"></mdui-icon-save>
                 保存
               </mdui-button>
@@ -250,6 +263,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
           </div>
         </mdui-card>
 
+        <h2 id="settings-assets" className="settings-section-title">图片资源</h2>
         <mdui-card className="settings-card" variant="outlined">
           <div className="settings-item-content">
             <div className="settings-item-heading">
@@ -273,6 +287,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
           </div>
         </mdui-card>
 
+        <h2 id="settings-other" className="settings-section-title">其他设置</h2>
         <mdui-card className="settings-card" variant="outlined">
           <div className="settings-item-content">
             <div className="settings-item-heading">
@@ -322,7 +337,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 maxlength="80"
                 onInput={(event) => setCopyrightName((event.target as HTMLInputElement | null)?.value ?? "")}
               />
-              <mdui-button type="button" variant="tonal" loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
                 <mdui-icon-save slot="icon"></mdui-icon-save>
                 保存
               </mdui-button>

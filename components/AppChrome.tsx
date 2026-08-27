@@ -34,7 +34,7 @@ export function AppChrome({
 
   return (
     <>
-      <Header admin={adminArea && adminAuthenticated} title={siteName} faviconUrl={faviconUrl} algoliaConfig={algoliaConfig} />
+      <Header admin={adminArea && adminAuthenticated} showSearch={pathname !== "/ask"} title={siteName} faviconUrl={faviconUrl} algoliaConfig={algoliaConfig} />
       <PublicNavigation />
       <div key={pathname} className="page-content page-transition">{children}</div>
       {!adminArea ? <Footer copyrightName={copyrightName} siteName={siteName} siteUrl={siteUrl} /> : null}

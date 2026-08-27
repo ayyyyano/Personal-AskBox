@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   const passed = await verifyTurnstile(parsed.data.turnstileToken ?? null, ip);
   if (!passed) {
-    return NextResponse.json({ error: "人机验证失败，请刷新后重试。" }, { status: 400 });
+    return NextResponse.json({ error: "人机验证未通过，请重新完成验证后再提交。" }, { status: 400 });
   }
 
   const id = nanoid(16);

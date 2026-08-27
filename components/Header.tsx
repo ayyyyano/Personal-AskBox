@@ -22,12 +22,13 @@ const themeLabel: Record<Theme, string> = {
   dark: "深色模式",
 };
 
-export function Header({ admin = false, title = "个人提问箱", faviconUrl = "/favicon.ico", algoliaConfig }: { admin?: boolean; title?: string; faviconUrl?: string; algoliaConfig?: AlgoliaConfig }) {
+export function Header({ admin = false, showSearch = true, title = "个人提问箱", faviconUrl = "/favicon.ico", algoliaConfig }: { admin?: boolean; showSearch?: boolean; title?: string; faviconUrl?: string; algoliaConfig?: AlgoliaConfig }) {
   const [theme, setTheme] = useState<Theme>("auto");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchBusy, setSearchBusy] = useState(false);
+  const [searchError, setSearchError] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const searchFieldRef = useRef<HTMLElement>(null);
 
@@ -71,8 +72,16 @@ export function Header({ admin = false, title = "个人提问箱", faviconUrl = 
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setSearchResults([]); return; }
     setSearchBusy(true);
-    try { const { hits } = await searchQuestions(q, admin ? undefined : "status:published", algoliaConfig); setSearchResults(hits); } catch (error) { console.error("Search failed:", error); setSearchResults([]); }
-    setSearchBusy(false);
+    setSearchError(false);
+    try {
+      const { hits } = await searchQuestions(q, admin ? undefined : "status:published", algoliaConfig);
+      setSearchResults(hits);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResults([]);
+      setSearchError(true);
+    }
+    finally { setSearchBusy(false); }
   }, [admin, algoliaConfig]);
 
   useEffect(() => {
@@ -80,10 +89,11 @@ export function Header({ admin = false, title = "个人提问箱", faviconUrl = 
     return () => clearTimeout(t);
   }, [searchQuery, doSearch]);
 
-  const openSearch = () => { setSearchOpen(true); setSearchQuery(""); setSearchResults([]); };
+  const openSearch = () => { setSearchOpen(true); setSearchQuery(""); setSearchResults([]); setSearchError(false); };
 
   return (
-    <mdui-top-app-bar className="app-bar">
+    <>
+      <mdui-top-app-bar className="app-bar">
       <div className="shell topbar-inner">
         <Link href={admin ? "/admin" : "/ask"} className="brand">
           <span className="brand-mark">
@@ -107,9 +117,11 @@ export function Header({ admin = false, title = "个人提问箱", faviconUrl = 
               </mdui-button-icon>
             </Link>
           )}
-          <mdui-button-icon aria-label="搜索问题" onClick={openSearch}>
-            <mdui-icon-search></mdui-icon-search>
-          </mdui-button-icon>
+            {showSearch ? (
+              <mdui-button-icon aria-label="搜索问题" onClick={openSearch}>
+                <mdui-icon-search></mdui-icon-search>
+              </mdui-button-icon>
+            ) : null}
           <mdui-button-icon aria-label={themeLabel[theme]} onClick={toggleTheme}>
             {theme === "auto" && <mdui-icon-light-mode></mdui-icon-light-mode>}
             {theme === "light" && <mdui-icon-dark-mode></mdui-icon-dark-mode>}
@@ -118,29 +130,37 @@ export function Header({ admin = false, title = "个人提问箱", faviconUrl = 
         </div>
       </div>
 
-      <mdui-dialog ref={dialogRef} open={searchOpen || undefined} headline="搜索问题">
+      </mdui-top-app-bar>
+
+      <mdui-dialog className="search-dialog" ref={dialogRef} open={searchOpen || undefined} headline="搜索问题">
         <mdui-text-field ref={searchFieldRef} value={searchQuery} placeholder="输入关键词…" variant="outlined" clearable helper="由 Algolia 提供搜索" autofocus>
           <mdui-icon-search slot="icon"></mdui-icon-search>
         </mdui-text-field>
         {searchBusy ? (
           <div style={{display:"flex",justifyContent:"center",padding:16}}><mdui-circular-progress /></div>
+        ) : searchError ? (
+          <div className="search-empty-state">
+            <p>搜索服务暂时不可用，请稍后重试。</p>
+            <mdui-button type="button" variant="outlined" onClick={() => void doSearch(searchQuery)}>重新搜索</mdui-button>
+          </div>
         ) : searchResults.length > 0 ? (
-          <div style={{maxHeight:"50vh",overflowY:"auto"}}>
+          <div className="search-results" aria-live="polite">
+            <p className="search-results-count">找到 {searchResults.length} 条结果</p>
             {searchResults.map(r => (
-              <div key={r.objectID ?? r.id} style={{padding:"10px 0",borderBottom:"1px solid rgb(var(--mdui-color-outline-variant))"}}>
-                <p style={{margin:"0 0 4px",fontWeight:500}}><MarkdownContent text={r.content} /></p>
-                {r.answer ? <p style={{margin:"0 0 4px",fontSize:"0.875rem",color:"rgb(var(--mdui-color-on-surface-variant))"}}><MarkdownContent text={r.answer} /></p> : null}
-                <span style={{fontSize:"0.75rem",color:"rgb(var(--mdui-color-on-surface-variant))"}}>
+              <mdui-card key={r.objectID ?? r.id} className="search-result-card" variant="elevated">
+                <p className="search-result-question"><MarkdownContent text={r.content} /></p>
+                {r.answer ? <p className="search-result-answer"><MarkdownContent text={r.answer} /></p> : null}
+                <span className="search-result-meta">
                   {r.nickname || "匿名"} · {r.status === "published" ? (r.published_at ? new Date(r.published_at.replace(" ","T")+"Z").toLocaleDateString() : "") : r.status}
                 </span>
-              </div>
+              </mdui-card>
             ))}
           </div>
         ) : searchQuery.trim() ? (
-          <p className="muted">没有找到相关问题。</p>
+          <p className="search-empty-state muted">没有找到相关问题。</p>
         ) : null}
         <mdui-button slot="action" variant="text" type="button" onClick={() => setSearchOpen(false)}>关闭</mdui-button>
       </mdui-dialog>
-    </mdui-top-app-bar>
+    </>
   );
 }
