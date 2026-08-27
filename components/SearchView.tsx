@@ -4,8 +4,9 @@ import { searchQuestions, type SearchResult } from "@/lib/algolia";
 import { useSearchParams, useRouter } from "next/navigation";
 import { TimeDisplay } from "@/components/TimeDisplay";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import type { AlgoliaConfig } from "@/lib/algolia-config";
 
-export function SearchView() {
+export function SearchView({ algoliaConfig }: { algoliaConfig: AlgoliaConfig }) {
   const params = useSearchParams();
   const router = useRouter();
   const initialQuery = params.get("q") ?? "";
@@ -27,18 +28,17 @@ export function SearchView() {
     setBusy(true);
     setSearched(true);
     try {
-      const { hits } = await searchQuestions(q, "status:published");
+      const { hits } = await searchQuestions(q, "status:published", algoliaConfig);
       setResults(hits);
     } catch (err) {
       console.error("Search failed:", err);
     }
     setBusy(false);
-  }, []);
+  }, [algoliaConfig]);
 
   useEffect(() => {
-    if (initialQuery) doSearch(initialQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (initialQuery) void doSearch(initialQuery);
+  }, [initialQuery, doSearch]);
 
   const searchTimer = useRef<number | undefined>(undefined);
 
@@ -87,7 +87,7 @@ export function SearchView() {
           ) : (
             results.map((r) => (
               <article
-                key={r.id}
+                key={r.objectID ?? r.id}
                 style={{
                   padding: 16,
                   borderRadius: 12,

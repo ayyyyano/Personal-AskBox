@@ -13,6 +13,9 @@ export const DEFAULT_SITE_SETTINGS = {
   backgroundKey: null,
   backgroundType: null,
   copyrightName: "Nekro",
+  topBarOpacity: 92,
+  navigationOpacity: 90,
+  cardOpacity: 88,
   revision: 0,
 } as const;
 
@@ -27,6 +30,9 @@ export type SiteSettings = {
   backgroundKey: string | null;
   backgroundType: string | null;
   copyrightName: string;
+  topBarOpacity: number;
+  navigationOpacity: number;
+  cardOpacity: number;
   revision: number;
 };
 
@@ -41,6 +47,9 @@ type SiteSettingsRow = {
   background_key: string | null;
   background_type: string | null;
   copyright_name: string | null;
+  top_bar_opacity: number | null;
+  navigation_opacity: number | null;
+  card_opacity: number | null;
   revision: number | null;
 };
 
@@ -51,6 +60,11 @@ function normalizeColor(value: string | null | undefined) {
 function normalizeText(value: string | null | undefined, fallback: string) {
   const text = value?.trim();
   return text || fallback;
+}
+
+function normalizeOpacity(value: number | null | undefined, fallback: number) {
+  const opacity = Number(value);
+  return Number.isFinite(opacity) ? Math.min(100, Math.max(0, Math.round(opacity))) : fallback;
 }
 
 export function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSettings {
@@ -65,6 +79,9 @@ export function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSetting
     backgroundKey: row?.background_key ?? DEFAULT_SITE_SETTINGS.backgroundKey,
     backgroundType: row?.background_type ?? DEFAULT_SITE_SETTINGS.backgroundType,
     copyrightName: normalizeText(row?.copyright_name, DEFAULT_SITE_SETTINGS.copyrightName),
+    topBarOpacity: normalizeOpacity(row?.top_bar_opacity, DEFAULT_SITE_SETTINGS.topBarOpacity),
+    navigationOpacity: normalizeOpacity(row?.navigation_opacity, DEFAULT_SITE_SETTINGS.navigationOpacity),
+    cardOpacity: normalizeOpacity(row?.card_opacity, DEFAULT_SITE_SETTINGS.cardOpacity),
     revision: Math.max(0, Number(row?.revision ?? DEFAULT_SITE_SETTINGS.revision)),
   };
 }
@@ -149,9 +166,12 @@ export async function updateSiteSettings(settings: SiteSettings) {
     settings.backgroundKey,
     settings.backgroundType,
     settings.copyrightName,
+    settings.topBarOpacity,
+    settings.navigationOpacity,
+    settings.cardOpacity,
   ];
   await executeSettings(
-    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = ?, favicon_type = ?, background_key = ?, background_type = ?, copyright_name = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = ?, favicon_type = ?, background_key = ?, background_type = ?, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
     params,
   );
   return { ...settings, revision: settings.revision + 1 };
@@ -161,7 +181,7 @@ export async function resetSiteSettings() {
   await ensureSettingsRow();
   const current = await getFreshSiteSettings();
   await executeSettings(
-    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = NULL, favicon_type = NULL, background_key = NULL, background_type = NULL, copyright_name = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = NULL, favicon_type = NULL, background_key = NULL, background_type = NULL, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
     [
       DEFAULT_SITE_SETTINGS.siteName,
       DEFAULT_SITE_SETTINGS.askTitle,
@@ -169,6 +189,9 @@ export async function resetSiteSettings() {
       DEFAULT_SITE_SETTINGS.adminLoginTitle,
       DEFAULT_SITE_SETTINGS.primaryColor,
       DEFAULT_SITE_SETTINGS.copyrightName,
+      DEFAULT_SITE_SETTINGS.topBarOpacity,
+      DEFAULT_SITE_SETTINGS.navigationOpacity,
+      DEFAULT_SITE_SETTINGS.cardOpacity,
     ],
   );
   return {

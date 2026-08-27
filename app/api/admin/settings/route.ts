@@ -12,6 +12,7 @@ const colorPattern = /^#[0-9a-f]{6}$/i;
 const siteNamePattern = /^.{1,80}$/u;
 const customTitlePattern = /^.{1,120}$/u;
 const copyrightPattern = /^.{1,80}$/u;
+const opacityPattern = /^(?:100|[0-9]{1,2})$/;
 
 type SettingsAction = "update" | "favicon" | "background" | "remove-background" | "reset";
 
@@ -77,12 +78,18 @@ export async function POST(request: NextRequest) {
     const displayTitle = String(form.get("displayTitle") ?? current.displayTitle).trim();
     const adminLoginTitle = String(form.get("adminLoginTitle") ?? current.adminLoginTitle).trim();
     const copyrightName = String(form.get("copyrightName") ?? current.copyrightName).trim();
+    const topBarOpacity = String(form.get("topBarOpacity") ?? current.topBarOpacity).trim();
+    const navigationOpacity = String(form.get("navigationOpacity") ?? current.navigationOpacity).trim();
+    const cardOpacity = String(form.get("cardOpacity") ?? current.cardOpacity).trim();
     if (!colorPattern.test(primaryColor)) throw new Error("主题色必须是 #RRGGBB 格式。");
     if (!siteNamePattern.test(siteName)) throw new Error("站点名称长度必须为 1 到 80 个字符。");
     if (!customTitlePattern.test(askTitle) || !customTitlePattern.test(displayTitle) || !customTitlePattern.test(adminLoginTitle)) {
       throw new Error("自定义标题长度必须为 1 到 120 个字符。");
     }
     if (!copyrightPattern.test(copyrightName)) throw new Error("页脚名称长度必须为 1 到 80 个字符。");
+    if (!opacityPattern.test(topBarOpacity) || !opacityPattern.test(navigationOpacity) || !opacityPattern.test(cardOpacity)) {
+      throw new Error("透明度必须是 0 到 100 的整数。");
+    }
 
     await updateSiteSettings({
       ...current,
@@ -92,6 +99,9 @@ export async function POST(request: NextRequest) {
       adminLoginTitle,
       primaryColor: primaryColor.toUpperCase(),
       copyrightName,
+      topBarOpacity: Number(topBarOpacity),
+      navigationOpacity: Number(navigationOpacity),
+      cardOpacity: Number(cardOpacity),
     });
     return NextResponse.json({ settings: await getFreshSiteSettings() }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

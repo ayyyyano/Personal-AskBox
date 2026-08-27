@@ -16,6 +16,9 @@
   --mdui-color-on-primary-container-dark: var(--askbox-on-primary-container-dark-rgb, 234, 221, 255);
   --mdui-color-secondary: 180, 140, 190;
   --mdui-color-tertiary: 190, 180, 140;
+  --askbox-topbar-opacity: 0.92;
+  --askbox-navigation-opacity: 0.9;
+  --askbox-card-opacity: 0.88;
 }
 
 * {
@@ -55,7 +58,8 @@ mdui-card {
 
 .app-bar {
   --z-index: 2100;
-  background-color: rgb(var(--mdui-color-surface)) !important;
+  background-color: rgba(var(--mdui-color-surface), var(--askbox-topbar-opacity)) !important;
+  backdrop-filter: blur(16px);
   box-shadow: none !important;
   transition: none !important;
 }
@@ -247,7 +251,7 @@ mdui-card {
   width: 100%;
   border: 1px solid rgb(var(--mdui-color-outline-variant));
   border-radius: 8px;
-  background: rgb(var(--mdui-color-surface-container));
+  background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
 }
 
 .panel {
@@ -287,6 +291,20 @@ mdui-card {
 
 .admin-layout mdui-tabs {
   --mdui-color-surface: transparent;
+}
+
+.admin-menu-card,
+.admin-tabs-card {
+  display: block;
+  background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
+}
+
+.admin-menu-card {
+  padding: 8px;
+}
+
+.admin-tabs-card {
+  padding: 8px 12px;
 }
 
 .admin-content {
@@ -347,7 +365,7 @@ mdui-card {
   --settings-card-background: var(--mdui-color-surface);
   display: block;
   width: 100%;
-  background: rgb(var(--settings-card-background));
+  background: rgba(var(--settings-card-background), var(--askbox-card-opacity));
 }
 
 .settings-list mdui-list-item {
@@ -442,6 +460,35 @@ mdui-card {
   border: 1px solid rgb(var(--mdui-color-outline));
   border-radius: 12px;
   background: transparent;
+}
+
+.settings-opacity-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-opacity-field {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-opacity-field > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgb(var(--mdui-color-on-surface-variant));
+  font-size: 0.875rem;
+}
+
+.settings-opacity-field output {
+  color: rgb(var(--mdui-color-primary));
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.settings-opacity-field input[type="range"] {
+  width: 100%;
+  accent-color: rgb(var(--mdui-color-primary));
 }
 
 .settings-preview {
@@ -547,6 +594,13 @@ mdui-card {
   top: 0;
   bottom: 0;
   height: auto;
+  background-color: rgba(var(--mdui-color-surface), var(--askbox-navigation-opacity)) !important;
+  backdrop-filter: blur(16px);
+}
+
+.navigation-bar mdui-navigation-bar {
+  background-color: rgba(var(--mdui-color-surface), var(--askbox-navigation-opacity)) !important;
+  backdrop-filter: blur(16px);
 }
 
 footer.shell {
@@ -573,9 +627,8 @@ footer.shell {
 
 .mdui-theme-light .panel,
 .mdui-theme-light .question-card,
-.mdui-theme-light .admin-card,
-.mdui-theme-light mdui-card {
-  background: #fff;
+.mdui-theme-light .admin-card {
+  background: rgba(255, 255, 255, var(--askbox-card-opacity));
 }
 
 .mdui-theme-light .panel mdui-text-field,
@@ -597,9 +650,8 @@ footer.shell {
 @media (prefers-color-scheme: light) {
   .mdui-theme-auto .panel,
   .mdui-theme-auto .question-card,
-  .mdui-theme-auto .admin-card,
-  .mdui-theme-auto mdui-card {
-    background: #fff;
+  .mdui-theme-auto .admin-card {
+    background: rgba(255, 255, 255, var(--askbox-card-opacity));
   }
 
   .mdui-theme-auto .panel mdui-text-field,

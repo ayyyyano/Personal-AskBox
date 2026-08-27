@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PublicNavigation } from "@/components/Navigation";
+import type { AlgoliaConfig } from "@/lib/algolia-config";
 
 type AppChromeProps = {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ type AppChromeProps = {
   copyrightName: string;
   siteUrl: string;
   adminAuthenticated: boolean;
+  algoliaConfig: AlgoliaConfig;
 };
 
 function isAdminPath(pathname: string) {
@@ -25,13 +27,14 @@ export function AppChrome({
   copyrightName,
   siteUrl,
   adminAuthenticated,
+  algoliaConfig,
 }: AppChromeProps) {
   const pathname = usePathname();
   const adminArea = isAdminPath(pathname);
 
   return (
     <>
-      <Header admin={adminArea && adminAuthenticated} title={siteName} faviconUrl={faviconUrl} />
+      <Header admin={adminArea && adminAuthenticated} title={siteName} faviconUrl={faviconUrl} algoliaConfig={algoliaConfig} />
       <PublicNavigation />
       <div key={pathname} className="page-content page-transition">{children}</div>
       {!adminArea ? <Footer copyrightName={copyrightName} siteName={siteName} siteUrl={siteUrl} /> : null}

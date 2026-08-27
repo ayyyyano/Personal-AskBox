@@ -1,0 +1,3 @@
+ALTER TABLE site_settings ADD COLUMN top_bar_opacity INTEGER NOT NULL DEFAULT 92;
+ALTER TABLE site_settings ADD COLUMN navigation_opacity INTEGER NOT NULL DEFAULT 90;
+ALTER TABLE site_settings ADD COLUMN card_opacity INTEGER NOT NULL DEFAULT 88;

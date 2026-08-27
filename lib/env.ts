@@ -10,6 +10,10 @@ export type CloudflareEnv = {
   ADMIN_PASSWORD_HASH?: string;
   TURNSTILE_SECRET_KEY?: string;
   NEXT_PUBLIC_TURNSTILE_SITE_KEY?: string;
+  NEXT_PUBLIC_ALGOLIA_APP_ID?: string;
+  NEXT_PUBLIC_ALGOLIA_SEARCH_ONLY_API_KEY?: string;
+  NEXT_PUBLIC_ALGOLIA_INDEX?: string;
+  ALGOLIA_ADMIN_API_KEY?: string;
 };
 
 export function getEnv(name: string, fallback = "") {

@@ -19,20 +19,22 @@ export function AdminMenu() {
           <p className="lede">选择一个功能开始。</p>
         </div>
       </div>
-      <mdui-list>
-        <Link href="/admin/questions" className="admin-menu-link">
-          <mdui-list-item headline="问题列表" description="查看、回答、发布或删除收到的问题" rounded>
-            <mdui-icon-list slot="icon"></mdui-icon-list>
-            <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
-          </mdui-list-item>
-        </Link>
-        <Link href="/admin/settings" className="admin-menu-link">
-          <mdui-list-item headline="自定义设置" description="个性化网站内容与显示选项" rounded>
-            <mdui-icon-settings slot="icon"></mdui-icon-settings>
-            <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
-          </mdui-list-item>
-        </Link>
-      </mdui-list>
+      <mdui-card className="admin-menu-card" variant="outlined">
+        <mdui-list>
+          <Link href="/admin/questions" className="admin-menu-link">
+            <mdui-list-item headline="问题列表" description="查看、回答、发布或删除收到的问题" rounded>
+              <mdui-icon-list slot="icon"></mdui-icon-list>
+              <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
+            </mdui-list-item>
+          </Link>
+          <Link href="/admin/settings" className="admin-menu-link">
+            <mdui-list-item headline="自定义设置" description="个性化网站内容与显示选项" rounded>
+              <mdui-icon-settings slot="icon"></mdui-icon-settings>
+              <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
+            </mdui-list-item>
+          </Link>
+        </mdui-list>
+      </mdui-card>
     </section>
   );
 }

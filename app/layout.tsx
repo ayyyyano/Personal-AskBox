@@ -6,6 +6,7 @@ import { MduiBoot } from "@/components/MduiBoot";
 import { isAdmin } from "@/lib/auth";
 import { colorContrastRgb, colorToRgb, contrastForRgb, getSiteSettings, mixColor, siteAssetUrl } from "@/lib/site-settings";
 import { getSiteUrl } from "@/lib/site-url";
+import { getPublicAlgoliaConfig } from "@/lib/algolia-config";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, siteUrl, adminAuthenticated] = await Promise.all([
+  const [settings, siteUrl, adminAuthenticated, algoliaConfig] = await Promise.all([
     getSiteSettings(),
     getSiteUrl(),
     isAdmin(),
+    getPublicAlgoliaConfig(),
   ]);
   const rootStyle = {
     "--askbox-primary-light-rgb": colorToRgb(settings.primaryColor),
@@ -35,6 +37,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--askbox-primary-container-dark-rgb": mixColor(settings.primaryColor, [0, 0, 0], 0.55),
     "--askbox-on-primary-container-light-rgb": contrastForRgb(mixColor(settings.primaryColor, [255, 255, 255], 0.8)),
     "--askbox-on-primary-container-dark-rgb": contrastForRgb(mixColor(settings.primaryColor, [0, 0, 0], 0.55)),
+    "--mdui-color-secondary-light": colorToRgb(settings.primaryColor),
+    "--mdui-color-secondary-dark": colorToRgb(settings.primaryColor),
+    "--mdui-color-secondary-container-light": mixColor(settings.primaryColor, [255, 255, 255], 0.8),
+    "--mdui-color-secondary-container-dark": mixColor(settings.primaryColor, [0, 0, 0], 0.55),
+    "--mdui-color-on-secondary-container-light": contrastForRgb(mixColor(settings.primaryColor, [255, 255, 255], 0.8)),
+    "--mdui-color-on-secondary-container-dark": contrastForRgb(mixColor(settings.primaryColor, [0, 0, 0], 0.55)),
+    "--askbox-topbar-opacity": String(settings.topBarOpacity / 100),
+    "--askbox-navigation-opacity": String(settings.navigationOpacity / 100),
+    "--askbox-card-opacity": String(settings.cardOpacity / 100),
     "--askbox-background-image": settings.backgroundKey
       ? `url("${siteAssetUrl("background", settings.revision)}")`
       : "none",
@@ -50,6 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           copyrightName={settings.copyrightName}
           siteUrl={siteUrl}
           adminAuthenticated={adminAuthenticated}
+          algoliaConfig={algoliaConfig}
         >
           {children}
         </AppChrome>

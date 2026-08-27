@@ -70,23 +70,25 @@ export function AdminInbox() {
 
   return (
     <section className="admin-layout">
-      <div className="row">
-        <mdui-tabs value={status} full-width style={{width:"100%"}}>
-          {(["pending","answered","published","all"] as const).map((item) => (
-            <mdui-tab
-              key={item}
-              value={item}
-              onClick={() => {
-                setStatus(item);
-                load(item);
-              }}
-            >
-              {filterLabels[item]}
-            </mdui-tab>
-          ))}
-        </mdui-tabs>
-        {busy ? <mdui-circular-progress /> : null}
-      </div>
+      <mdui-card className="admin-tabs-card" variant="outlined">
+        <div className="row">
+          <mdui-tabs value={status} full-width style={{width:"100%"}}>
+            {["pending","answered","published","all"].map((item) => (
+              <mdui-tab
+                key={item}
+                value={item}
+                onClick={() => {
+                  setStatus(item);
+                  load(item);
+                }}
+              >
+                {filterLabels[item]}
+              </mdui-tab>
+            ))}
+          </mdui-tabs>
+          {busy ? <mdui-circular-progress /> : null}
+        </div>
+      </mdui-card>
 
       {questions.map((question) => (
         <mdui-card className="admin-card" variant="elevated" key={question.id}>

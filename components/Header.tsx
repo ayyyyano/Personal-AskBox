@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { searchQuestions, type SearchResult } from "@/lib/algolia";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import type { AlgoliaConfig } from "@/lib/algolia-config";
 import Link from "next/link";
 
 type Theme = "auto" | "light" | "dark";
@@ -21,7 +22,7 @@ const themeLabel: Record<Theme, string> = {
   dark: "深色模式",
 };
 
-export function Header({ admin = false, title = "个人提问箱", faviconUrl = "/favicon.ico" }: { admin?: boolean; title?: string; faviconUrl?: string }) {
+export function Header({ admin = false, title = "个人提问箱", faviconUrl = "/favicon.ico", algoliaConfig }: { admin?: boolean; title?: string; faviconUrl?: string; algoliaConfig?: AlgoliaConfig }) {
   const [theme, setTheme] = useState<Theme>("auto");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,9 +71,9 @@ export function Header({ admin = false, title = "个人提问箱", faviconUrl = 
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) { setSearchResults([]); return; }
     setSearchBusy(true);
-    try { const { hits } = await searchQuestions(q, admin ? undefined : "status:published"); setSearchResults(hits); } catch {}
+    try { const { hits } = await searchQuestions(q, admin ? undefined : "status:published", algoliaConfig); setSearchResults(hits); } catch (error) { console.error("Search failed:", error); setSearchResults([]); }
     setSearchBusy(false);
-  }, [admin]);
+  }, [admin, algoliaConfig]);
 
   useEffect(() => {
     const t = setTimeout(() => doSearch(searchQuery), 300);
@@ -126,7 +127,7 @@ export function Header({ admin = false, title = "个人提问箱", faviconUrl = 
         ) : searchResults.length > 0 ? (
           <div style={{maxHeight:"50vh",overflowY:"auto"}}>
             {searchResults.map(r => (
-              <div key={r.id} style={{padding:"10px 0",borderBottom:"1px solid rgb(var(--mdui-color-outline-variant))"}}>
+              <div key={r.objectID ?? r.id} style={{padding:"10px 0",borderBottom:"1px solid rgb(var(--mdui-color-outline-variant))"}}>
                 <p style={{margin:"0 0 4px",fontWeight:500}}><MarkdownContent text={r.content} /></p>
                 {r.answer ? <p style={{margin:"0 0 4px",fontSize:"0.875rem",color:"rgb(var(--mdui-color-on-surface-variant))"}}><MarkdownContent text={r.answer} /></p> : null}
                 <span style={{fontSize:"0.75rem",color:"rgb(var(--mdui-color-on-surface-variant))"}}>

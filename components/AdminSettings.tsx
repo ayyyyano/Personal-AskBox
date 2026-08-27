@@ -19,6 +19,9 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const [adminLoginTitle, setAdminLoginTitle] = useState(initialSettings.adminLoginTitle);
   const [primaryColor, setPrimaryColor] = useState(initialSettings.primaryColor);
   const [copyrightName, setCopyrightName] = useState(initialSettings.copyrightName);
+  const [topBarOpacity, setTopBarOpacity] = useState(initialSettings.topBarOpacity);
+  const [navigationOpacity, setNavigationOpacity] = useState(initialSettings.navigationOpacity);
+  const [cardOpacity, setCardOpacity] = useState(initialSettings.cardOpacity);
   const [busy, setBusy] = useState<Action | null>(null);
   const [message, setMessage] = useState("");
   const faviconInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +29,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
 
   useEffect(() => {
     import("@mdui/icons/palette.js");
+    import("@mdui/icons/opacity.js");
     import("@mdui/icons/title.js");
     import("@mdui/icons/text-fields.js");
     import("@mdui/icons/image.js");
@@ -50,6 +54,9 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       form.set("adminLoginTitle", adminLoginTitle);
       form.set("primaryColor", primaryColor);
       form.set("copyrightName", copyrightName);
+      form.set("topBarOpacity", String(topBarOpacity));
+      form.set("navigationOpacity", String(navigationOpacity));
+      form.set("cardOpacity", String(cardOpacity));
     }
 
     try {
@@ -66,6 +73,9 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       setAdminLoginTitle(data.settings.adminLoginTitle);
       setPrimaryColor(data.settings.primaryColor);
       setCopyrightName(data.settings.copyrightName);
+      setTopBarOpacity(data.settings.topBarOpacity);
+      setNavigationOpacity(data.settings.navigationOpacity);
+      setCardOpacity(data.settings.cardOpacity);
       setMessage(action === "reset" ? "已还原默认配置。" : "设置已保存。");
       router.refresh();
     } catch {
@@ -119,6 +129,34 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 保存
               </mdui-button>
             </div>
+          </div>
+        </mdui-card>
+
+        <mdui-card className="settings-card" variant="outlined">
+          <div className="settings-item-content">
+            <div className="settings-item-heading">
+              <mdui-icon-opacity className="settings-item-icon"></mdui-icon-opacity>
+              <div className="settings-item-copy">
+                <strong>界面透明度</strong>
+                <span className="muted">调整顶栏、底部/侧边应用栏和全局卡片的背景透明度</span>
+              </div>
+            </div>
+            <div className="settings-opacity-fields">
+              {([
+                ["顶栏", topBarOpacity, setTopBarOpacity],
+                ["底部/侧边应用栏", navigationOpacity, setNavigationOpacity],
+                ["全局卡片", cardOpacity, setCardOpacity],
+              ] as const).map(([label, value, setter]) => (
+                <label className="settings-opacity-field" key={label}>
+                  <span><strong>{label}</strong><output>{value}%</output></span>
+                  <input type="range" min="0" max="100" step="1" value={value} aria-label={`${label}透明度`} onChange={(event) => setter(Number(event.target.value))} />
+                </label>
+              ))}
+            </div>
+            <mdui-button type="button" variant="tonal" loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-icon-save slot="icon"></mdui-icon-save>
+              保存透明度
+            </mdui-button>
           </div>
         </mdui-card>
 

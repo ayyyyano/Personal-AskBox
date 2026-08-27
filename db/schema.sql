@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS site_settings (
   background_key TEXT,
   background_type TEXT,
   copyright_name TEXT NOT NULL DEFAULT 'Nekro',
+  top_bar_opacity INTEGER NOT NULL DEFAULT 92,
+  navigation_opacity INTEGER NOT NULL DEFAULT 90,
+  card_opacity INTEGER NOT NULL DEFAULT 88,
   revision INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
