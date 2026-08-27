@@ -15,12 +15,21 @@ declare global {
 
 export function AskForm({ siteKey }: { siteKey: string }) {
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [feedback, setFeedback] = useState<{ title: string; message: string } | null>(null);
   const [token, setToken] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [showTurnstile, setShowTurnstile] = useState(false);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const feedbackRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = feedbackRef.current;
+    if (!el) return;
+    const handler = () => setFeedback(null);
+    el.addEventListener("close", handler);
+    return () => el.removeEventListener("close", handler);
+  }, []);
 
   useEffect(() => {
     import("@mdui/icons/alternate-email.js");
@@ -62,7 +71,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
     event.preventDefault();
     const formEl = event.currentTarget;
     setBusy(true);
-    setMessage("");
+    setFeedback(null);
     const form = new FormData(formEl);
     form.set("turnstileToken", token);
     if (file) form.set("attachment", file);
@@ -77,14 +86,14 @@ export function AskForm({ siteKey }: { siteKey: string }) {
         setFile(null);
         setShowTurnstile(false);
         setToken("");
-        setMessage("已经投递到收件箱。");
+        setFeedback({ title: "提问已提交", message: "问题已经投递到收件箱，感谢你的提问。" });
         return;
       }
       const data = (await response.json().catch(() => null)) as { error?: string } | null;
-      setMessage(data?.error ?? "提交失败，请稍后再试。");
+      setFeedback({ title: "提交失败", message: data?.error ?? "请稍后再试。" });
     } catch {
       setBusy(false);
-      setMessage("网络错误，请稍后再试。");
+      setFeedback({ title: "提交失败", message: "网络错误，请稍后再试。" });
     }
   }
 
@@ -114,7 +123,10 @@ export function AskForm({ siteKey }: { siteKey: string }) {
         <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
         发送问题
       </mdui-button>
-      {message ? <p style={{margin:0,padding:"8px 16px",borderRadius:8,color:"rgb(var(--mdui-color-on-surface-variant))"}}>{message}</p> : null}
+      <mdui-dialog ref={feedbackRef} open={feedback ? true : undefined} headline={feedback?.title ?? "提示"}>
+        <p>{feedback?.message}</p>
+        <mdui-button slot="action" variant="text" type="button" onClick={() => setFeedback(null)}>知道了</mdui-button>
+      </mdui-dialog>
     </form>
   );
 }

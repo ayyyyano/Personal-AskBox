@@ -13,10 +13,10 @@ export const DEFAULT_SITE_SETTINGS = {
   backgroundKey: null,
   backgroundType: null,
   copyrightName: "Nekro",
-  topBarOpacity: 92,
-  navigationOpacity: 90,
-  cardOpacity: 88,
-  backgroundOpacity: 100,
+  topBarOpacity: 50,
+  navigationOpacity: 50,
+  cardOpacity: 80,
+  backgroundOpacity: 60,
   revision: 0,
 } as const;
 

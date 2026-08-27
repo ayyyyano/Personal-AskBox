@@ -24,9 +24,18 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const [cardOpacity, setCardOpacity] = useState(initialSettings.cardOpacity);
   const [backgroundOpacity, setBackgroundOpacity] = useState(initialSettings.backgroundOpacity);
   const [busy, setBusy] = useState<Action | null>(null);
-  const [message, setMessage] = useState("");
+  const [feedback, setFeedback] = useState<{ title: string; message: string } | null>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
+  const feedbackRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = feedbackRef.current;
+    if (!el) return;
+    const handler = () => setFeedback(null);
+    el.addEventListener("close", handler);
+    return () => el.removeEventListener("close", handler);
+  }, []);
 
   useEffect(() => {
     import("@mdui/icons/palette.js");
@@ -44,7 +53,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
 
   async function submit(action: Action, file?: File) {
     setBusy(action);
-    setMessage("");
+    setFeedback(null);
     const form = new FormData();
     form.set("action", action);
     if (file) form.set("file", file);
@@ -65,7 +74,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       const response = await fetch("/api/admin/settings", { method: "POST", body: form });
       const data = (await response.json().catch(() => null)) as { settings?: SiteSettings; error?: string } | null;
       if (!response.ok || !data?.settings) {
-        setMessage(data?.error ?? "保存失败，请稍后再试。");
+        setFeedback({ title: "保存失败", message: data?.error ?? "请稍后再试。" });
         return;
       }
       setSettings(data.settings);
@@ -79,10 +88,13 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       setNavigationOpacity(data.settings.navigationOpacity);
       setCardOpacity(data.settings.cardOpacity);
       setBackgroundOpacity(data.settings.backgroundOpacity);
-      setMessage(action === "reset" ? "已还原默认配置。" : "设置已保存。");
+      setFeedback({
+        title: action === "reset" ? "配置已还原" : "设置已保存",
+        message: action === "reset" ? "所有自定义设置已恢复为默认值。" : "新的设置已应用到前台与管理后台。",
+      });
       router.refresh();
     } catch {
-      setMessage("网络错误，请稍后再试。");
+      setFeedback({ title: "保存失败", message: "网络错误，请稍后再试。" });
     } finally {
       setBusy(null);
     }
@@ -336,7 +348,10 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
         </mdui-card>
       </div>
 
-      {message ? <p className="settings-message" role="status">{message}</p> : null}
+      <mdui-dialog ref={feedbackRef} open={feedback ? true : undefined} headline={feedback?.title ?? "提示"}>
+        <p>{feedback?.message}</p>
+        <mdui-button slot="action" variant="text" type="button" onClick={() => setFeedback(null)}>知道了</mdui-button>
+      </mdui-dialog>
     </section>
   );
 }
