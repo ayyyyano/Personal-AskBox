@@ -96,6 +96,93 @@ npm run cf:deploy
 
 部署成功后会输出 `https://xxx.workers.dev` 访问地址。
 
+## 已有项目的手动更新与迁移
+
+以下流程适用于已经上线、需要同步新代码或数据库结构的项目。默认先备份远端 D1，再执行迁移，最后部署 Worker。只更新前端或 Worker 代码时，可以跳过数据库迁移步骤。
+
+### 1. 同步代码并检查工作区
+
+```bash
+git fetch origin
+git pull --ff-only origin main
+npm ci
+npx wrangler whoami
+```
+
+确认当前分支和提交正确，并确认 Wrangler 登录的是拥有目标 Worker、D1、KV 和 R2 资源的 Cloudflare 账号。
+
+### 2. 备份远端 D1
+
+在执行任何远端迁移前保存一份 SQL 备份：
+
+```bash
+npx wrangler d1 export askbox-db --remote --output="./backup/askbox-$(date +%Y%m%d-%H%M%S).sql"
+```
+
+备份文件包含问答数据、站点设置和数据库结构。请将 `backup/` 加入 `.gitignore`，不要把备份文件提交到仓库或公开上传。
+
+如只想先确认数据规模，也可以执行只读查询：
+
+```bash
+npx wrangler d1 execute askbox-db --remote --command="SELECT COUNT(*) AS question_count FROM questions; SELECT status, COUNT(*) AS count FROM questions GROUP BY status ORDER BY status; SELECT COUNT(*) AS site_settings_count FROM site_settings;"
+```
+
+### 3. 应用版本化迁移
+
+先查看本地迁移文件，再按顺序应用尚未执行的迁移：
+
+```bash
+ls migrations
+npx wrangler d1 migrations list askbox-db --remote
+npx wrangler d1 migrations apply askbox-db --remote
+```
+
+本仓库当前的迁移包括：
+
+- `0002_add_site_appearance.sql`：添加主题色和顶栏、应用栏、卡片透明度字段
+- `0003_add_background_opacity.sql`：添加背景图片透明度字段
+
+不要使用 `npm run db:remote` 代替版本化迁移。该命令执行完整 `db/schema.sql`，适合首次初始化；已有项目更新数据库结构时应使用 `db:migrate:remote`，避免把初始化流程和版本迁移混在一起。
+
+本地验证迁移可使用：
+
+```bash
+npx wrangler d1 migrations apply askbox-db --local
+```
+
+### 4. 构建并部署 Worker
+
+```bash
+npm run cf:build
+npm run cf:deploy
+```
+
+`cf:deploy` 会先构建 OpenNext 产物，再部署 `personal-askbox`，并使用 `package.json` 中配置的域名。部署前如需确认只进行构建，可只执行 `npm run cf:build`。
+
+### 5. 上线后验证
+
+至少检查以下路径和功能：
+
+```bash
+curl -I https://你的域名/ask
+curl -I https://你的域名/display
+curl -I https://你的域名/search?q=test
+```
+
+然后人工确认：提问表单、人机验证、后台登录、回答发布、背景图片、搜索对话框和移动端导航。确认无误后再清理旧的本地备份；问答数据不会因 Worker 部署而被删除。
+
+### D1 权限或账号错误排查
+
+如果迁移出现 `The given account is not valid or is not authorized to access this service [code: 7403]`，按以下顺序检查：
+
+1. 执行 `npx wrangler whoami`，确认登录账号正确。
+2. 确认 `wrangler.jsonc` 中的 `account_id` 与目标 D1 所属账号一致。
+3. 确认 API Token 具有目标账号的 D1 编辑权限，以及 Workers 部署权限。
+4. 确认命令中的数据库名和 `database_id` 对应同一个 D1 数据库。
+5. 重新登录后再执行 `npx wrangler d1 migrations apply askbox-db --remote`。
+
+这类错误通常是账号、Token 权限或资源归属不一致，不是迁移 SQL 本身的问题。若远端迁移已执行成功，不要重复运行旧迁移；先用 `npx wrangler d1 migrations list askbox-db --remote` 确认状态。
+
 ## 功能特性
 
 - **匿名提问**：支持公开昵称或匿名留言，可附带图片附件（PNG/JPG/WebP/GIF）
@@ -259,21 +346,21 @@ npm run db:local   # 初始化本地 D1
 npm run db:remote  # 初始化远端 D1
 ```
 
-如果数据库已经存在，请在部署设置功能前执行一次完整 schema 初始化（命令使用 `INSERT OR IGNORE`，不会覆盖已有设置）：
+首次创建数据库时，可以执行完整 schema 初始化（命令使用 `INSERT OR IGNORE`，不会覆盖已有设置）：
 
 ```bash
 npm run db:local
 npm run db:remote
 ```
 
-后续版本化迁移可使用：
+已有项目的后续版本化迁移应使用：
 
 ```bash
 npm run db:migrate:local
 npm run db:migrate:remote
 ```
 
-当前仓库尚未提供 `migrations/` 或 `db/migrations/` 下的版本化 SQL 文件，`db:migrate:*` 暂不能替代完整 schema 初始化。`db:local` 只更新本地 D1，`db:remote` 才会更新 Cloudflare 远端 D1。设置功能使用前必须确认目标环境已存在 `site_settings` 表；初始化不会删除问题数据，也不会创建新的 Cloudflare 资源。
+当前仓库提供 `migrations/0002_add_site_appearance.sql` 和 `migrations/0003_add_background_opacity.sql`。`db:local` 只初始化本地 D1，`db:remote` 才会初始化 Cloudflare 远端 D1；`db:migrate:local` 和 `db:migrate:remote` 只应用尚未执行的版本化迁移。设置功能使用前必须确认目标环境已存在 `site_settings` 表；初始化和迁移不会删除问题数据，也不会创建新的 Cloudflare 资源。
 
 ## 法律与隐私
 

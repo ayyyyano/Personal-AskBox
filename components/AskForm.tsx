@@ -113,10 +113,10 @@ export function AskForm({ siteKey }: { siteKey: string }) {
 
   return (
     <form className="form-stack" onSubmit={submit}>
-      <mdui-text-field name="nickname" label="昵称 (可选)" maxlength="40" variant="outlined" clearable>
+      <mdui-text-field name="nickname" label="昵称 (可选)" maxlength="40" variant="filled" clearable>
         <mdui-icon-alternate-email slot="icon"></mdui-icon-alternate-email>
       </mdui-text-field>
-      <mdui-text-field name="content" label="想问什么? (支持 Markdown)" variant="outlined" required rows="7" maxlength="1000" counter />
+      <mdui-text-field name="content" label="想问什么? (支持 Markdown)" variant="filled" required rows="7" maxlength="1000" counter />
       <mdui-divider className="visually-hidden-divider"></mdui-divider>
       <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setFile(e.target.files?.[0] ?? null)} hidden />
       <mdui-button className="full-width-button" variant="outlined" full-width onClick={() => fileInputRef.current?.click()}>

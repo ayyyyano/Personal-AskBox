@@ -10,6 +10,7 @@ export type SearchResult = {
   status: string;
   attachment_key: string | null;
   created_at: string;
+  answered_at?: string | null;
   published_at: string | null;
 };
 

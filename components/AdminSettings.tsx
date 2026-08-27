@@ -120,16 +120,6 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
         <p className="lede">逐项调整公开页面的外观和署名。修改会应用到前台与管理后台。</p>
       </header>
 
-      <nav className="settings-nav" aria-label="设置分组">
-        <a href="#settings-content">基础内容</a>
-        <a href="#settings-appearance">主题与透明度</a>
-        <a href="#settings-assets">图片资源</a>
-        <a href="#settings-other">其他设置</a>
-      </nav>
-      <p className={`settings-save-state${hasUnsavedChanges ? " is-dirty" : ""}`} role="status">
-        {hasUnsavedChanges ? "有未保存的修改" : "设置已保存"}
-      </p>
-
       <div className="settings-list">
         <h2 id="settings-content" className="settings-section-title">基础内容</h2>
         <mdui-card className="settings-card" variant="outlined">
@@ -147,7 +137,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 value={siteName}
                 label="站点名称"
                 placeholder="例如：我的提问箱"
-                variant="outlined"
+                variant="filled"
                 maxlength="80"
                 onInput={(event) => setSiteName((event.target as HTMLInputElement | null)?.value ?? "")}
               />
@@ -203,7 +193,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 value={askTitle}
                 label="提问页标题"
                 placeholder="有什么想问的吗？"
-                variant="outlined"
+                variant="filled"
                 maxlength="120"
                 onInput={(event) => setAskTitle((event.target as HTMLInputElement | null)?.value ?? "")}
               />
@@ -211,7 +201,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 value={displayTitle}
                 label="展示页标题"
                 placeholder="来看看回答吧。"
-                variant="outlined"
+                variant="filled"
                 maxlength="120"
                 onInput={(event) => setDisplayTitle((event.target as HTMLInputElement | null)?.value ?? "")}
               />
@@ -219,7 +209,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 value={adminLoginTitle}
                 label="后台登录页标题"
                 placeholder="别来无恙啊！"
-                variant="outlined"
+                variant="filled"
                 maxlength="120"
                 onInput={(event) => setAdminLoginTitle((event.target as HTMLInputElement | null)?.value ?? "")}
               />
@@ -251,7 +241,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
               <mdui-text-field
                 value={primaryColor}
                 label="HEX 颜色"
-                variant="outlined"
+                variant="filled"
                 maxlength="7"
                 onInput={(event) => setPrimaryColor(((event.target as HTMLInputElement | null)?.value ?? "").toUpperCase())}
               />
@@ -333,7 +323,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
               <mdui-text-field
                 value={copyrightName}
                 label="版权名称"
-                variant="outlined"
+                variant="filled"
                 maxlength="80"
                 onInput={(event) => setCopyrightName((event.target as HTMLInputElement | null)?.value ?? "")}
               />

@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
     status: "pending",
     attachment_key: attachmentKey ?? null,
     created_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+    answered_at: null,
     published_at: null
   });
 

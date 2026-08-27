@@ -22,6 +22,12 @@ const themeLabel: Record<Theme, string> = {
   dark: "深色模式",
 };
 
+function formatSearchTime(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value.replace(" ", "T") + "Z");
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
 export function Header({ admin = false, showSearch = true, title = "个人提问箱", faviconUrl = "/favicon.ico", algoliaConfig }: { admin?: boolean; showSearch?: boolean; title?: string; faviconUrl?: string; algoliaConfig?: AlgoliaConfig }) {
   const [theme, setTheme] = useState<Theme>("auto");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -37,6 +43,8 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
     import("@mdui/icons/dark-mode.js");
     import("@mdui/icons/auto-mode.js");
     import("@mdui/icons/search.js");
+    import("@mdui/icons/question-mark.js");
+    import("@mdui/icons/question-answer.js");
     if (admin) import("@mdui/icons/logout.js");
 
     const saved = localStorage.getItem(THEME_KEY) as Theme | null;
@@ -133,9 +141,11 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
       </mdui-top-app-bar>
 
       <mdui-dialog className="search-dialog" ref={dialogRef} open={searchOpen || undefined} headline="搜索问题">
-        <mdui-text-field ref={searchFieldRef} value={searchQuery} placeholder="输入关键词…" variant="outlined" clearable helper="由 Algolia 提供搜索" autofocus>
-          <mdui-icon-search slot="icon"></mdui-icon-search>
-        </mdui-text-field>
+        <div className="search-field-wrap">
+          <mdui-text-field ref={searchFieldRef} value={searchQuery} placeholder="输入关键词…" variant="filled" clearable helper="由 Algolia 提供搜索" autofocus>
+            <mdui-icon-search slot="icon"></mdui-icon-search>
+          </mdui-text-field>
+        </div>
         {searchBusy ? (
           <div style={{display:"flex",justifyContent:"center",padding:16}}><mdui-circular-progress /></div>
         ) : searchError ? (
@@ -148,11 +158,11 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
             <p className="search-results-count">找到 {searchResults.length} 条结果</p>
             {searchResults.map(r => (
               <mdui-card key={r.objectID ?? r.id} className="search-result-card" variant="elevated">
+                <p className="search-result-label qa-label"><mdui-icon-question-mark></mdui-icon-question-mark> {r.nickname || "匿名"} 在 {formatSearchTime(r.created_at)} 的提问</p>
                 <p className="search-result-question"><MarkdownContent text={r.content} /></p>
-                {r.answer ? <p className="search-result-answer"><MarkdownContent text={r.answer} /></p> : null}
-                <span className="search-result-meta">
-                  {r.nickname || "匿名"} · {r.status === "published" ? (r.published_at ? new Date(r.published_at.replace(" ","T")+"Z").toLocaleDateString() : "") : r.status}
-                </span>
+                <mdui-divider className="search-result-divider"></mdui-divider>
+                <p className="search-result-label qa-label"><mdui-icon-question-answer></mdui-icon-question-answer> 回答于 {formatSearchTime(r.answered_at ?? r.published_at ?? r.created_at)}</p>
+                {r.answer ? <p className="search-result-answer"><MarkdownContent text={r.answer} /></p> : <p className="search-result-answer muted">暂未回答</p>}
               </mdui-card>
             ))}
           </div>

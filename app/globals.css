@@ -371,9 +371,14 @@ mdui-card {
 
 .search-dialog::part(body) {
   display: grid;
-  gap: 12px;
+  gap: 0;
   max-height: min(70vh, 720px);
   overflow-y: auto;
+}
+
+.search-field-wrap {
+  flex: 0 0 auto;
+  padding-bottom: 12px;
 }
 
 .search-results {
@@ -398,6 +403,36 @@ mdui-card {
 .search-result-question,
 .search-result-answer {
   margin: 0 0 8px;
+}
+
+.search-result-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  color: rgb(var(--mdui-color-primary));
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.qa-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: rgb(var(--mdui-color-primary));
+  font-weight: 600;
+}
+
+.qa-label mdui-icon-question-mark,
+.qa-label mdui-icon-question-answer {
+  flex: 0 0 auto;
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+.search-result-divider {
+  margin: 14px 0;
 }
 
 .search-result-question {
@@ -431,6 +466,10 @@ mdui-card {
   --mdui-color-surface: transparent;
 }
 
+.admin-layout mdui-tabs::part(container)::after {
+  display: none;
+}
+
 .admin-menu-card,
 .admin-tabs-card {
   display: block;
@@ -442,7 +481,11 @@ mdui-card {
 }
 
 .admin-tabs-card {
+  position: sticky;
+  top: var(--app-bar-height);
+  z-index: 10;
   padding: 8px 12px;
+  box-shadow: 0 4px 18px rgba(var(--mdui-color-shadow), 0.08);
 }
 
 .admin-content {
@@ -454,6 +497,9 @@ mdui-card {
 }
 
 .admin-menu {
+  width: min(100%, 760px);
+  margin-right: auto;
+  margin-left: auto;
   max-width: 760px;
 }
 
@@ -491,45 +537,6 @@ mdui-card {
 
 .settings-header .lede {
   margin: 0;
-}
-
-.settings-nav {
-  position: sticky;
-  top: calc(var(--app-bar-height) + 12px);
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding: 8px;
-  border: 1px solid rgb(var(--mdui-color-outline-variant));
-  border-radius: 16px;
-  background: rgba(var(--mdui-color-surface), var(--askbox-topbar-opacity));
-  backdrop-filter: blur(16px);
-}
-
-.settings-nav a {
-  padding: 8px 12px;
-  border-radius: 999px;
-  color: rgb(var(--mdui-color-on-surface-variant));
-  font-size: 0.875rem;
-}
-
-.settings-nav a:hover,
-.settings-nav a:focus-visible {
-  color: rgb(var(--mdui-color-primary));
-  background: rgba(var(--mdui-color-primary), 0.12);
-}
-
-.settings-save-state {
-  margin: 0 0 16px;
-  color: rgb(var(--mdui-color-on-surface-variant));
-  font-size: 0.875rem;
-}
-
-.settings-save-state.is-dirty {
-  color: rgb(var(--mdui-color-primary));
-  font-weight: 600;
 }
 
 .settings-list {
@@ -627,12 +634,6 @@ mdui-card {
   width: 100%;
   min-width: 0;
   --mdui-color-background: var(--mdui-color-surface-container);
-}
-
-.settings-color-controls mdui-text-field::part(label),
-.settings-text-controls mdui-text-field::part(label),
-.settings-title-fields mdui-text-field::part(label) {
-  background-color: rgb(var(--settings-card-background));
 }
 
 .settings-color-controls input[type="color"] {
@@ -868,10 +869,8 @@ footer.shell {
   --mdui-color-background: var(--settings-card-background);
 }
 
-.settings-card .settings-color-controls mdui-text-field::part(label),
-.settings-card .settings-text-controls mdui-text-field::part(label),
-.settings-card .settings-title-fields mdui-text-field::part(label) {
-  background-color: rgb(var(--settings-card-background));
+mdui-text-field::part(container) {
+  background-color: transparent !important;
 }
 
 @media (max-width: 768px) {
@@ -947,12 +946,6 @@ footer.shell {
   .settings-page {
     padding-top: 32px;
     padding-bottom: 48px;
-  }
-
-  .settings-nav {
-    top: calc(var(--app-bar-height) + 8px);
-    overflow-x: auto;
-    flex-wrap: nowrap;
   }
 
   .settings-list mdui-list-item {

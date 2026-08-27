@@ -166,7 +166,7 @@ export function AdminInbox() {
               {question.attachment_key ? <p><img src={`/api/questions/${question.id}/attachment`} alt="附件图片" className="admin-attachment" /></p> : null}
               {question.answer ? <p className="muted">已答：<MarkdownContent text={question.answer} /></p> : null}
               <form className="form-stack" onSubmit={(event) => { event.preventDefault(); void answer(question.id, event.currentTarget); }}>
-                <mdui-text-field name="answer" label={question.answer ? "修改回答" : "回答"} variant="outlined" rows="4" required value={question.answer ?? undefined} />
+                <mdui-text-field name="answer" label={question.answer ? "修改回答" : "回答"} variant="filled" rows="4" required value={question.answer ?? undefined} />
                 <mdui-checkbox name="publish" checked={question.status === "published" || undefined}>发布到首页</mdui-checkbox>
                 <div className="admin-question-actions">
                   <mdui-button type="submit" loading={answerBusyId === question.id || undefined}><mdui-icon-check slot="icon"></mdui-icon-check>保存回答</mdui-button>

@@ -41,11 +41,11 @@ export function PublishedList({ questions }: { questions: Question[] }) {
           key={question.id}
           onClick={() => copyCard(question)}
         >
-          <p style={{fontWeight:500,margin:0}}><mdui-icon-question-mark style={{fontSize:18,verticalAlign:"middle"}}></mdui-icon-question-mark> {question.nickname || "匿名"} 在 {formatTime(question.created_at)} 的提问</p>
+          <p className="qa-label"><mdui-icon-question-mark></mdui-icon-question-mark> {question.nickname || "匿名"} 在 {formatTime(question.created_at)} 的提问</p>
           <p><MarkdownContent text={question.content} /></p>
           {question.attachment_key ? <p><img src={`/api/questions/${question.id}/attachment`} alt="附件图片" style={{maxWidth:"100%",maxHeight:320,borderRadius:8,objectFit:"contain"}} /></p> : null}
           <mdui-divider style={{opacity:0}} />
-          <p style={{fontWeight:500,margin:0}}><mdui-icon-question-answer style={{fontSize:18,verticalAlign:"middle"}}></mdui-icon-question-answer> 回答于 {formatTime(question.answered_at)}</p>
+          <p className="qa-label"><mdui-icon-question-answer></mdui-icon-question-answer> 回答于 {formatTime(question.answered_at)}</p>
           <p><MarkdownContent text={question.answer!} /></p>
         </mdui-card>
       ))}

@@ -31,10 +31,10 @@ export function AdminLogin() {
   return (
     <mdui-card className="panel admin-login-panel" variant="elevated">
     <form className="form-stack" onSubmit={submit}>
-      <mdui-text-field disabled label="账号" value="Admin">
+      <mdui-text-field disabled label="账号" value="Admin" variant="filled">
         <mdui-icon-account-circle slot="icon"></mdui-icon-account-circle>
       </mdui-text-field>
-      <mdui-text-field name="password" type="password" label="密码" variant="outlined" required toggle-password>
+      <mdui-text-field name="password" type="password" label="密码" variant="filled" required toggle-password>
         <mdui-icon-lock slot="icon"></mdui-icon-lock>
       </mdui-text-field>
       <mdui-button type="submit" loading={busy || undefined}>

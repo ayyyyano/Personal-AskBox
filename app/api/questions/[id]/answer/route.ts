@@ -15,9 +15,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   }
   const { id } = await context.params;
   await answerQuestion(id, parsed.data.answer, parsed.data.publish);
+  const answeredAt = new Date().toISOString().replace("T", " ").slice(0, 19);
   await partialUpdateQuestion(id, {
     answer: parsed.data.answer,
     status: parsed.data.publish ? "published" : "answered",
+    answered_at: answeredAt,
     published_at: parsed.data.publish ? new Date().toISOString().replace("T", " ").slice(0, 19) : undefined,
   });
   return NextResponse.json({ ok: true });
