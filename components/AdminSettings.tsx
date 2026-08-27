@@ -22,6 +22,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const [topBarOpacity, setTopBarOpacity] = useState(initialSettings.topBarOpacity);
   const [navigationOpacity, setNavigationOpacity] = useState(initialSettings.navigationOpacity);
   const [cardOpacity, setCardOpacity] = useState(initialSettings.cardOpacity);
+  const [backgroundOpacity, setBackgroundOpacity] = useState(initialSettings.backgroundOpacity);
   const [busy, setBusy] = useState<Action | null>(null);
   const [message, setMessage] = useState("");
   const faviconInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +58,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       form.set("topBarOpacity", String(topBarOpacity));
       form.set("navigationOpacity", String(navigationOpacity));
       form.set("cardOpacity", String(cardOpacity));
+      form.set("backgroundOpacity", String(backgroundOpacity));
     }
 
     try {
@@ -76,6 +78,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       setTopBarOpacity(data.settings.topBarOpacity);
       setNavigationOpacity(data.settings.navigationOpacity);
       setCardOpacity(data.settings.cardOpacity);
+      setBackgroundOpacity(data.settings.backgroundOpacity);
       setMessage(action === "reset" ? "已还原默认配置。" : "设置已保存。");
       router.refresh();
     } catch {
@@ -138,7 +141,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
               <mdui-icon-opacity className="settings-item-icon"></mdui-icon-opacity>
               <div className="settings-item-copy">
                 <strong>界面透明度</strong>
-                <span className="muted">调整顶栏、底部/侧边应用栏和全局卡片的背景透明度</span>
+                <span className="muted">调整顶栏、底部/侧边应用栏、全局卡片和背景图片的透明度</span>
               </div>
             </div>
             <div className="settings-opacity-fields">
@@ -146,6 +149,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 ["顶栏", topBarOpacity, setTopBarOpacity],
                 ["底部/侧边应用栏", navigationOpacity, setNavigationOpacity],
                 ["全局卡片", cardOpacity, setCardOpacity],
+                ["背景图片", backgroundOpacity, setBackgroundOpacity],
               ] as const).map(([label, value, setter]) => (
                 <label className="settings-opacity-field" key={label}>
                   <span><strong>{label}</strong><output>{value}%</output></span>

@@ -81,13 +81,14 @@ export async function POST(request: NextRequest) {
     const topBarOpacity = String(form.get("topBarOpacity") ?? current.topBarOpacity).trim();
     const navigationOpacity = String(form.get("navigationOpacity") ?? current.navigationOpacity).trim();
     const cardOpacity = String(form.get("cardOpacity") ?? current.cardOpacity).trim();
+    const backgroundOpacity = String(form.get("backgroundOpacity") ?? current.backgroundOpacity).trim();
     if (!colorPattern.test(primaryColor)) throw new Error("主题色必须是 #RRGGBB 格式。");
     if (!siteNamePattern.test(siteName)) throw new Error("站点名称长度必须为 1 到 80 个字符。");
     if (!customTitlePattern.test(askTitle) || !customTitlePattern.test(displayTitle) || !customTitlePattern.test(adminLoginTitle)) {
       throw new Error("自定义标题长度必须为 1 到 120 个字符。");
     }
     if (!copyrightPattern.test(copyrightName)) throw new Error("页脚名称长度必须为 1 到 80 个字符。");
-    if (!opacityPattern.test(topBarOpacity) || !opacityPattern.test(navigationOpacity) || !opacityPattern.test(cardOpacity)) {
+    if (!opacityPattern.test(topBarOpacity) || !opacityPattern.test(navigationOpacity) || !opacityPattern.test(cardOpacity) || !opacityPattern.test(backgroundOpacity)) {
       throw new Error("透明度必须是 0 到 100 的整数。");
     }
 
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
       topBarOpacity: Number(topBarOpacity),
       navigationOpacity: Number(navigationOpacity),
       cardOpacity: Number(cardOpacity),
+      backgroundOpacity: Number(backgroundOpacity),
     });
     return NextResponse.json({ settings: await getFreshSiteSettings() }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

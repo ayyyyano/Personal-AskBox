@@ -46,6 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--askbox-topbar-opacity": String(settings.topBarOpacity / 100),
     "--askbox-navigation-opacity": String(settings.navigationOpacity / 100),
     "--askbox-card-opacity": String(settings.cardOpacity / 100),
+    "--askbox-background-opacity": String(settings.backgroundOpacity / 100),
     "--askbox-background-image": settings.backgroundKey
       ? `url("${siteAssetUrl("background", settings.revision)}")`
       : "none",

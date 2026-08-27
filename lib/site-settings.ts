@@ -16,6 +16,7 @@ export const DEFAULT_SITE_SETTINGS = {
   topBarOpacity: 92,
   navigationOpacity: 90,
   cardOpacity: 88,
+  backgroundOpacity: 100,
   revision: 0,
 } as const;
 
@@ -33,6 +34,7 @@ export type SiteSettings = {
   topBarOpacity: number;
   navigationOpacity: number;
   cardOpacity: number;
+  backgroundOpacity: number;
   revision: number;
 };
 
@@ -50,6 +52,7 @@ type SiteSettingsRow = {
   top_bar_opacity: number | null;
   navigation_opacity: number | null;
   card_opacity: number | null;
+  background_opacity: number | null;
   revision: number | null;
 };
 
@@ -82,6 +85,7 @@ export function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSetting
     topBarOpacity: normalizeOpacity(row?.top_bar_opacity, DEFAULT_SITE_SETTINGS.topBarOpacity),
     navigationOpacity: normalizeOpacity(row?.navigation_opacity, DEFAULT_SITE_SETTINGS.navigationOpacity),
     cardOpacity: normalizeOpacity(row?.card_opacity, DEFAULT_SITE_SETTINGS.cardOpacity),
+    backgroundOpacity: normalizeOpacity(row?.background_opacity, DEFAULT_SITE_SETTINGS.backgroundOpacity),
     revision: Math.max(0, Number(row?.revision ?? DEFAULT_SITE_SETTINGS.revision)),
   };
 }
@@ -169,9 +173,10 @@ export async function updateSiteSettings(settings: SiteSettings) {
     settings.topBarOpacity,
     settings.navigationOpacity,
     settings.cardOpacity,
+    settings.backgroundOpacity,
   ];
   await executeSettings(
-    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = ?, favicon_type = ?, background_key = ?, background_type = ?, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = ?, favicon_type = ?, background_key = ?, background_type = ?, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, background_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
     params,
   );
   return { ...settings, revision: settings.revision + 1 };
@@ -181,7 +186,7 @@ export async function resetSiteSettings() {
   await ensureSettingsRow();
   const current = await getFreshSiteSettings();
   await executeSettings(
-    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = NULL, favicon_type = NULL, background_key = NULL, background_type = NULL, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = NULL, favicon_type = NULL, background_key = NULL, background_type = NULL, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, background_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
     [
       DEFAULT_SITE_SETTINGS.siteName,
       DEFAULT_SITE_SETTINGS.askTitle,
@@ -192,6 +197,7 @@ export async function resetSiteSettings() {
       DEFAULT_SITE_SETTINGS.topBarOpacity,
       DEFAULT_SITE_SETTINGS.navigationOpacity,
       DEFAULT_SITE_SETTINGS.cardOpacity,
+      DEFAULT_SITE_SETTINGS.backgroundOpacity,
     ],
   );
   return {
