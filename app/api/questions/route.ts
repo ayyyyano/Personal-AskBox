@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { createQuestion, listQuestions } from "@/lib/db";
 import { isAdmin } from "@/lib/auth";
@@ -70,16 +70,22 @@ export async function POST(request: NextRequest) {
     attachmentKey
   });
 
-  await indexQuestion({
-    objectID: id,
-    nickname: parsed.data.nickname || null,
-    content: parsed.data.content,
-    answer: null,
-    status: "pending",
-    attachment_key: attachmentKey ?? null,
-    created_at: new Date().toISOString().replace("T", " ").slice(0, 19),
-    answered_at: null,
-    published_at: null
+  after(async () => {
+    try {
+      await indexQuestion({
+        objectID: id,
+        nickname: parsed.data.nickname || null,
+        content: parsed.data.content,
+        answer: null,
+        status: "pending",
+        attachment_key: attachmentKey ?? null,
+        created_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+        answered_at: null,
+        published_at: null
+      });
+    } catch (error) {
+      console.error("Algolia index failed after question creation", error);
+    }
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

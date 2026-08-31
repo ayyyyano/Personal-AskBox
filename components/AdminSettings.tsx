@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { syncFavicon } from "@/components/AppChrome";
 import type { SiteSettings } from "@/lib/site-settings";
 
 type Action = "update" | "favicon" | "background" | "remove-background" | "reset";
@@ -36,7 +37,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
     const handler = () => setFeedback(null);
     el.addEventListener("close", handler);
     return () => el.removeEventListener("close", handler);
-  }, []);
+  }, [feedback]);
 
   useEffect(() => {
     import("@mdui/icons/palette.js");
@@ -53,6 +54,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   }, []);
 
   async function submit(action: Action, file?: File) {
+    if (busy) return;
     setBusy(action);
     setFeedback(null);
     const form = new FormData();
@@ -79,6 +81,9 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
         return;
       }
       setSettings(data.settings);
+      if (action === "favicon") {
+        syncFavicon(assetUrl("favicon", data.settings.revision));
+      }
       setSiteName(data.settings.siteName);
       setAskTitle(data.settings.askTitle);
       setDisplayTitle(data.settings.displayTitle);
@@ -112,6 +117,12 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
     }
   }
 
+  function closeFeedback() {
+    const dialog = feedbackRef.current as (HTMLElement & { open?: boolean }) | null;
+    if (dialog) dialog.open = false;
+    setFeedback(null);
+  }
+
   return (
     <section className="settings-page" aria-labelledby="admin-settings-title">
       <header className="settings-header">
@@ -141,7 +152,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 maxlength="80"
                 onInput={(event) => setSiteName((event.target as HTMLInputElement | null)?.value ?? "")}
               />
-              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
                 <mdui-icon-save slot="icon"></mdui-icon-save>
                 保存
               </mdui-button>
@@ -172,7 +183,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 </label>
               ))}
             </div>
-            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
               <mdui-icon-save slot="icon"></mdui-icon-save>
               保存透明度
             </mdui-button>
@@ -214,7 +225,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 onInput={(event) => setAdminLoginTitle((event.target as HTMLInputElement | null)?.value ?? "")}
               />
             </div>
-            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
               <mdui-icon-save slot="icon"></mdui-icon-save>
               保存标题
             </mdui-button>
@@ -245,7 +256,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 maxlength="7"
                 onInput={(event) => setPrimaryColor(((event.target as HTMLInputElement | null)?.value ?? "").toUpperCase())}
               />
-              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
                 <mdui-icon-save slot="icon"></mdui-icon-save>
                 保存
               </mdui-button>
@@ -269,7 +280,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 <img src={settings.faviconKey ? assetUrl("favicon", settings.revision) : "/favicon.ico"} alt="当前头像预览" />
               </div>
               <input ref={faviconInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/x-icon" hidden onChange={(event) => chooseFile("favicon", event.target.files?.[0])} />
-              <mdui-button type="button" variant="outlined" loading={busy === "favicon" || undefined} onClick={() => faviconInputRef.current?.click()}>
+              <mdui-button type="button" variant="outlined" disabled={busy !== null || undefined} loading={busy === "favicon" || undefined} onClick={() => faviconInputRef.current?.click()}>
                 <mdui-icon-upload-file slot="icon"></mdui-icon-upload-file>
                 上传并更换
               </mdui-button>
@@ -295,12 +306,12 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 </div>
               ) : <span className="muted">未设置背景图片</span>}
               <input ref={backgroundInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => chooseFile("background", event.target.files?.[0])} />
-              <mdui-button type="button" variant="outlined" loading={busy === "background" || undefined} onClick={() => backgroundInputRef.current?.click()}>
+              <mdui-button type="button" variant="outlined" disabled={busy !== null || undefined} loading={busy === "background" || undefined} onClick={() => backgroundInputRef.current?.click()}>
                 <mdui-icon-upload-file slot="icon"></mdui-icon-upload-file>
                 上传并更换
               </mdui-button>
               {settings.backgroundKey ? (
-                <mdui-button type="button" variant="text" loading={busy === "remove-background" || undefined} onClick={() => submit("remove-background")}>
+                <mdui-button type="button" variant="text" disabled={busy !== null || undefined} loading={busy === "remove-background" || undefined} onClick={() => submit("remove-background")}>
                   <mdui-icon-delete slot="icon"></mdui-icon-delete>
                   清除
                 </mdui-button>
@@ -327,7 +338,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
                 maxlength="80"
                 onInput={(event) => setCopyrightName((event.target as HTMLInputElement | null)?.value ?? "")}
               />
-              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
                 <mdui-icon-save slot="icon"></mdui-icon-save>
                 保存
               </mdui-button>
@@ -345,7 +356,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
               </div>
             </div>
             <span className="settings-item-current muted">此操作会删除已上传的站点头像和背景图片</span>
-            <mdui-button type="button" variant="outlined" loading={busy === "reset" || undefined} onClick={resetSettings}>
+            <mdui-button type="button" variant="outlined" disabled={busy !== null || undefined} loading={busy === "reset" || undefined} onClick={resetSettings}>
               <mdui-icon-restore-page slot="icon"></mdui-icon-restore-page>
               还原默认
             </mdui-button>
@@ -353,10 +364,12 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
         </mdui-card>
       </div>
 
-      <mdui-dialog ref={feedbackRef} open={feedback ? true : undefined} headline={feedback?.title ?? "提示"}>
-        <p>{feedback?.message}</p>
-        <mdui-button slot="action" variant="text" type="button" onClick={() => setFeedback(null)}>知道了</mdui-button>
-      </mdui-dialog>
+      {feedback ? (
+        <mdui-dialog ref={feedbackRef} open headline={feedback.title}>
+          <p>{feedback.message}</p>
+          <mdui-button slot="action" variant="text" type="button" onClick={closeFeedback}>知道了</mdui-button>
+        </mdui-dialog>
+      ) : null}
     </section>
   );
 }

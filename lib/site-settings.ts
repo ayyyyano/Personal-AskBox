@@ -15,8 +15,8 @@ export const DEFAULT_SITE_SETTINGS = {
   copyrightName: "Nekro",
   topBarOpacity: 50,
   navigationOpacity: 50,
-  cardOpacity: 80,
-  backgroundOpacity: 60,
+  cardOpacity: 50,
+  backgroundOpacity: 50,
   revision: 0,
 } as const;
 

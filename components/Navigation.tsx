@@ -59,7 +59,7 @@ function NavigationItems({
   items: NavigationItem[];
   rail: boolean;
   activeValue: string;
-  onNavigate: (event: React.MouseEvent<HTMLElement>, href: string) => void;
+  onNavigate: (href: string) => void;
 }) {
   return (
     <>
@@ -70,8 +70,15 @@ function NavigationItems({
             <mdui-navigation-rail-item
               key={item.value}
               value={item.value}
-              href={item.href}
-              onClick={(event) => onNavigate(event, item.href)}
+              role="link"
+              tabindex="0"
+              onClick={() => onNavigate(item.href)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onNavigate(item.href);
+                }
+              }}
               aria-current={active ? "page" : undefined}
             >
               <NavigationIcon value={item.value} active={active} />
@@ -80,13 +87,20 @@ function NavigationItems({
           );
         }
         return (
-          <mdui-navigation-bar-item
-            key={item.value}
-            value={item.value}
-            href={item.href}
-            onClick={(event) => onNavigate(event, item.href)}
-            aria-current={active ? "page" : undefined}
-          >
+            <mdui-navigation-bar-item
+              key={item.value}
+              value={item.value}
+              role="link"
+              tabindex="0"
+              onClick={() => onNavigate(item.href)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onNavigate(item.href);
+                }
+              }}
+              aria-current={active ? "page" : undefined}
+            >
             <NavigationIcon value={item.value} active={active} />
             {item.label}
           </mdui-navigation-bar-item>
@@ -103,16 +117,8 @@ export function Navigation() {
   const activeValue = getActiveValue(pathname, items);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
-  function navigate(event: React.MouseEvent<HTMLElement>, href: string) {
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    ) return;
-    event.preventDefault();
+  function navigate(href: string) {
+    if (pathname === href) return;
     router.push(href);
   }
 
@@ -132,7 +138,9 @@ export function Navigation() {
     const update = () => setIsDesktop(media.matches);
     update();
     media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
+    return () => {
+      media.removeEventListener("change", update);
+    };
   }, []);
 
   if (isDesktop === null) return null;

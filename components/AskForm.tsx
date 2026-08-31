@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 declare global {
   interface Window {
@@ -29,7 +30,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
     const handler = () => setFeedback(null);
     el.addEventListener("close", handler);
     return () => el.removeEventListener("close", handler);
-  }, []);
+  }, [feedback]);
 
   useEffect(() => {
     import("@mdui/icons/alternate-email.js");
@@ -111,6 +112,19 @@ export function AskForm({ siteKey }: { siteKey: string }) {
     }
   }
 
+  function closeFeedback() {
+    const dialog = feedbackRef.current as (HTMLElement & { open?: boolean }) | null;
+    if (dialog) dialog.open = false;
+    setFeedback(null);
+  }
+
+  const feedbackDialog = feedback ? (
+    <mdui-dialog ref={feedbackRef} open headline={feedback.title}>
+      <p>{feedback.message}</p>
+      <mdui-button slot="action" variant="text" type="button" onClick={closeFeedback}>知道了</mdui-button>
+    </mdui-dialog>
+  ) : null;
+
   return (
     <form className="form-stack" onSubmit={submit}>
       <mdui-text-field name="nickname" label="昵称 (可选)" maxlength="40" variant="filled" clearable>
@@ -137,10 +151,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
         <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
         发送问题
       </mdui-button>
-      <mdui-dialog ref={feedbackRef} open={feedback ? true : undefined} headline={feedback?.title ?? "提示"}>
-        <p>{feedback?.message}</p>
-        <mdui-button slot="action" variant="text" type="button" onClick={() => setFeedback(null)}>知道了</mdui-button>
-      </mdui-dialog>
+      {typeof document === "undefined" || !feedbackDialog ? null : createPortal(feedbackDialog, document.body)}
     </form>
   );
 }

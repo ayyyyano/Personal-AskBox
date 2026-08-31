@@ -18,8 +18,9 @@
   --mdui-color-tertiary: 190, 180, 140;
   --askbox-topbar-opacity: 0.5;
   --askbox-navigation-opacity: 0.5;
-  --askbox-card-opacity: 0.8;
-  --askbox-background-opacity: 0.6;
+  --askbox-card-opacity: 0.5;
+  --askbox-background-opacity: 0.5;
+  --askbox-glass-blur: 16px;
 }
 
 * {
@@ -78,12 +79,15 @@ a {
 
 mdui-card {
   display: block;
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .app-bar {
   --z-index: 2100;
   background-color: rgba(var(--mdui-color-surface), var(--askbox-topbar-opacity)) !important;
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
   box-shadow: none !important;
   transition: none !important;
 }
@@ -191,7 +195,9 @@ mdui-card {
   padding: 40px;
   border: 1px solid rgb(var(--mdui-color-outline-variant));
   border-radius: 24px;
-  background: rgb(var(--mdui-color-surface-container));
+  background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
   text-align: center;
 }
 
@@ -276,6 +282,8 @@ mdui-card {
   border: 1px solid rgb(var(--mdui-color-outline-variant));
   border-radius: 8px;
   background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .admin-batch-bar {
@@ -287,6 +295,8 @@ mdui-card {
   border: 1px solid rgb(var(--mdui-color-outline-variant));
   border-radius: 16px;
   background: rgba(var(--mdui-color-primary-container), 0.35);
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .admin-question-summary {
@@ -312,6 +322,9 @@ mdui-card {
 
 .admin-question-content {
   padding-top: 16px;
+  background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .admin-attachment {
@@ -563,7 +576,9 @@ mdui-card {
   min-height: 92px;
   padding: 0;
   border: 1px solid rgb(var(--mdui-color-outline-variant));
-  background: rgb(var(--mdui-color-surface-container));
+  background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .settings-list mdui-list-item::part(container) {
@@ -748,7 +763,9 @@ mdui-card {
 .admin-list mdui-list-item {
   --shape-corner: 16px;
   margin-bottom: 8px;
-  background: rgb(var(--mdui-color-surface-container));
+  background: rgba(var(--mdui-color-surface-container), var(--askbox-card-opacity));
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .legal-page {
@@ -771,12 +788,14 @@ mdui-card {
   bottom: 0;
   height: auto;
   background-color: rgba(var(--mdui-color-surface), var(--askbox-navigation-opacity)) !important;
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 .navigation-bar mdui-navigation-bar {
   background-color: rgba(var(--mdui-color-surface), var(--askbox-navigation-opacity)) !important;
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
+  backdrop-filter: blur(var(--askbox-glass-blur));
 }
 
 footer.shell {
