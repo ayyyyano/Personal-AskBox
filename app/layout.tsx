@@ -51,6 +51,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       ? `url("${siteAssetUrl("background", settings.revision)}")`
       : "none",
   } as CSSProperties;
+  const faviconUrl = settings.faviconKey ? siteAssetUrl("favicon", settings.revision) : "/favicon.ico";
+  const logoUrl = settings.logoKey ? siteAssetUrl("logo", settings.revision) : "/logo.svg";
 
   return (
     <html lang="zh-CN" className="mdui-theme-auto" style={rootStyle}>
@@ -58,7 +60,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <MduiBoot />
         <AppChrome
           siteName={settings.siteName}
-          faviconUrl={settings.faviconKey ? siteAssetUrl("favicon", settings.revision) : "/favicon.ico"}
+          faviconUrl={faviconUrl}
+          logoUrl={logoUrl}
+          brandMode={settings.brandMode}
           copyrightName={settings.copyrightName}
           siteUrl={siteUrl}
           adminAuthenticated={adminAuthenticated}

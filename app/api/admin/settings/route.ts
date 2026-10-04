@@ -14,7 +14,7 @@ const customTitlePattern = /^.{1,120}$/u;
 const copyrightPattern = /^.{1,80}$/u;
 const opacityPattern = /^(?:100|[0-9]{1,2})$/;
 
-type SettingsAction = "update" | "favicon" | "background" | "remove-background" | "reset";
+type SettingsAction = "update" | "favicon" | "logo" | "remove-logo" | "background" | "remove-background" | "reset";
 
 function sameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       await resetSiteSettings();
       await Promise.allSettled([
         deleteAttachment(current.faviconKey),
+        deleteAttachment(current.logoKey),
         deleteAttachment(current.backgroundKey),
       ]);
       return NextResponse.json({ settings: await getFreshSiteSettings() }, { headers: { "Cache-Control": "no-store" } });
@@ -55,24 +56,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ settings: await getFreshSiteSettings() }, { headers: { "Cache-Control": "no-store" } });
     }
 
-    if (action === "favicon" || action === "background") {
+    if (action === "remove-logo") {
+      await updateSiteSettings({ ...current, logoKey: null, logoType: null });
+      await deleteAttachment(current.logoKey).catch(() => undefined);
+      return NextResponse.json({ settings: await getFreshSiteSettings() }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (action === "favicon" || action === "logo" || action === "background") {
       const file = form.get("file");
       if (!(file instanceof File)) throw new Error("请选择图片文件。");
       const uploaded = await saveSiteAsset(file, action);
       const next: SiteSettings = action === "favicon"
         ? { ...current, faviconKey: uploaded.key, faviconType: uploaded.type }
-        : { ...current, backgroundKey: uploaded.key, backgroundType: uploaded.type };
+        : action === "logo"
+          ? { ...current, logoKey: uploaded.key, logoType: uploaded.type }
+          : { ...current, backgroundKey: uploaded.key, backgroundType: uploaded.type };
       try {
         await updateSiteSettings(next);
       } catch (error) {
         await deleteAttachment(uploaded.key);
         throw error;
       }
-      await deleteAttachment(action === "favicon" ? current.faviconKey : current.backgroundKey).catch(() => undefined);
+      const previousKey = action === "favicon" ? current.faviconKey : action === "logo" ? current.logoKey : current.backgroundKey;
+      await deleteAttachment(previousKey).catch(() => undefined);
       return NextResponse.json({ settings: await getFreshSiteSettings() }, { headers: { "Cache-Control": "no-store" } });
     }
 
     const primaryColor = String(form.get("primaryColor") ?? current.primaryColor).trim();
+    const brandMode = String(form.get("brandMode") ?? current.brandMode).trim();
     const siteName = String(form.get("siteName") ?? current.siteName).trim();
     const askTitle = String(form.get("askTitle") ?? current.askTitle).trim();
     const displayTitle = String(form.get("displayTitle") ?? current.displayTitle).trim();
@@ -83,6 +94,7 @@ export async function POST(request: NextRequest) {
     const cardOpacity = String(form.get("cardOpacity") ?? current.cardOpacity).trim();
     const backgroundOpacity = String(form.get("backgroundOpacity") ?? current.backgroundOpacity).trim();
     if (!colorPattern.test(primaryColor)) throw new Error("主题色必须是 #RRGGBB 格式。");
+    if (brandMode !== "logo" && brandMode !== "avatar") throw new Error("顶部品牌展示方式无效。");
     if (!siteNamePattern.test(siteName)) throw new Error("站点名称长度必须为 1 到 80 个字符。");
     if (!customTitlePattern.test(askTitle) || !customTitlePattern.test(displayTitle) || !customTitlePattern.test(adminLoginTitle)) {
       throw new Error("自定义标题长度必须为 1 到 120 个字符。");
@@ -99,6 +111,7 @@ export async function POST(request: NextRequest) {
       displayTitle,
       adminLoginTitle,
       primaryColor: primaryColor.toUpperCase(),
+      brandMode,
       copyrightName,
       topBarOpacity: Number(topBarOpacity),
       navigationOpacity: Number(navigationOpacity),

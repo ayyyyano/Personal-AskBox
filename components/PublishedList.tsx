@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import type { Question } from "@/lib/db";
 import { MarkdownContent } from "@/components/MarkdownContent";
@@ -27,8 +28,12 @@ export function PublishedList({ questions }: { questions: Question[] }) {
 
   async function copyCard(question: Question) {
     const text = `Q: ${question.content}\nA: ${question.answer}`;
-    await navigator.clipboard.writeText(text);
-    setSnackMessage("已复制到剪贴板");
+    try {
+      await navigator.clipboard.writeText(text);
+      setSnackMessage("已复制到剪贴板");
+    } catch {
+      setSnackMessage("复制失败，请检查浏览器剪贴板权限");
+    }
   }
 
   return (
@@ -43,7 +48,19 @@ export function PublishedList({ questions }: { questions: Question[] }) {
         >
           <p className="qa-label"><mdui-icon-question-mark></mdui-icon-question-mark> {question.nickname || "匿名"} 在 {formatTime(question.created_at)} 的提问</p>
           <p><MarkdownContent text={question.content} /></p>
-          {question.attachment_key ? <p><img src={`/api/questions/${question.id}/attachment`} alt="附件图片" style={{maxWidth:"100%",maxHeight:320,borderRadius:8,objectFit:"contain"}} /></p> : null}
+          {question.attachment_key ? (
+            <p>
+              <Image
+                src={`/api/questions/${question.id}/attachment`}
+                alt="附件图片"
+                width={1280}
+                height={720}
+                sizes="(max-width: 768px) 100vw, 720px"
+                unoptimized
+                style={{ maxWidth: "100%", height: "auto", maxHeight: 320, borderRadius: 8, objectFit: "contain" }}
+              />
+            </p>
+          ) : null}
           <mdui-divider style={{opacity:0}} />
           <p className="qa-label"><mdui-icon-question-answer></mdui-icon-question-answer> 回答于 {formatTime(question.answered_at)}</p>
           <p><MarkdownContent text={question.answer!} /></p>

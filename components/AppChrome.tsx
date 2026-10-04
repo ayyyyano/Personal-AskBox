@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PublicNavigation } from "@/components/Navigation";
 import type { AlgoliaConfig } from "@/lib/algolia-config";
+import type { BrandMode } from "@/lib/site-settings";
 
 type AppChromeProps = {
   children: React.ReactNode;
   siteName: string;
   faviconUrl: string;
+  logoUrl: string;
+  brandMode: BrandMode;
   copyrightName: string;
   siteUrl: string;
   adminAuthenticated: boolean;
@@ -37,6 +40,8 @@ export function AppChrome({
   children,
   siteName,
   faviconUrl,
+  logoUrl,
+  brandMode,
   copyrightName,
   siteUrl,
   adminAuthenticated,
@@ -44,31 +49,23 @@ export function AppChrome({
 }: AppChromeProps) {
   const pathname = usePathname();
   const adminArea = isAdminPath(pathname);
-  const [pageTransitionActive, setPageTransitionActive] = useState(false);
-
   useEffect(() => {
     syncFavicon(faviconUrl);
   }, [faviconUrl]);
 
-  useEffect(() => {
-    setPageTransitionActive(false);
-    let enterFrame = 0;
-    const resetFrame = window.requestAnimationFrame(() => {
-      // Give the removed class a frame to commit before adding it again.
-      // This keeps fast RSC navigations (such as ask <-> display) animated.
-      enterFrame = window.requestAnimationFrame(() => setPageTransitionActive(true));
-    });
-    return () => {
-      window.cancelAnimationFrame(resetFrame);
-      window.cancelAnimationFrame(enterFrame);
-    };
-  }, [pathname]);
-
   return (
     <>
-      <Header admin={adminArea && adminAuthenticated} showSearch={pathname !== "/ask"} title={siteName} faviconUrl={faviconUrl} algoliaConfig={algoliaConfig} />
+      <Header
+        admin={adminArea && adminAuthenticated}
+        showSearch={pathname !== "/ask"}
+        title={siteName}
+        faviconUrl={faviconUrl}
+        logoUrl={logoUrl}
+        brandMode={brandMode}
+        algoliaConfig={algoliaConfig}
+      />
       <PublicNavigation />
-      <div className={`page-content${pageTransitionActive ? " page-transition" : ""}`}>{children}</div>
+      <div key={pathname} className="page-content page-transition">{children}</div>
       <Footer copyrightName={copyrightName} siteName={siteName} siteUrl={siteUrl} />
     </>
   );

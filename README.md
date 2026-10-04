@@ -1,5 +1,7 @@
 # 个人提问箱
 
+![LOGO](public/logo.svg)
+
 一个可以直接上线使用的匿名提问箱网站，适合放在个人主页、博客、社交资料页里收集匿名问题。
 
 ## 预览
@@ -12,24 +14,50 @@
 
 ## 技术栈
 
-- Next.js App Router
-- MDUI 2
-- Cloudflare D1 / KV / R2 / Turnstile / Workers
-- Algolia（可选搜索）
+| 组件 | 当前版本或用途 |
+|------|----------------|
+| Node.js | 22+ |
+| Next.js | 16.3.8，App Router |
+| React / React DOM | 19.3.0 |
+| TypeScript | 5.9.3 |
+| OpenNext for Cloudflare | 1.20.8 |
+| Wrangler | 4.147.0 |
+| MDUI | 2.1.5 |
+| Cloudflare | Workers、D1、KV、R2、Turnstile |
+| Algolia | 5.59.0，可选搜索 |
 
-## 快速部署（使用 Agent）
+完整依赖及精确版本以 `package.json` 和 `package-lock.json` 为准。安装依赖时使用 `npm ci`。
 
-本项目可用 [OpenCode](https://opencode.ai) 等 Agent 工具一键完成部署。在项目根目录向 Agent 发送：
+## 使用 Agent 辅助部署
 
+Agent 可以检查公开配置、生成部署命令和运行本地构建。账号登录、密钥录入、远端数据库初始化和部署由部署者在自己的终端中完成。
+
+以下内容属于敏感信息：`SESSION_SECRET`、`ADMIN_PASSWORD`、`TURNSTILE_SECRET_KEY`、`ALGOLIA_ADMIN_API_KEY`、Cloudflare API Token，以及保存在 `.env`、`.env.local` 或密码管理器中的其他凭据。敏感值应通过 Wrangler 的交互式提示录入，不应出现在 Agent 对话、命令参数、管道、日志或截图中。
+
+向第三方或云端 Agent 提供项目时，应使用不含私密文件的干净仓库副本。副本中不要复制 `.env`、`.env.local`、`.env*.local`、`.wrangler/`、数据库备份、日志和凭据文件。如果不希望公开 Cloudflare 资源 ID，也应先将副本中 `wrangler.jsonc` 的对应值替换为占位符。`.gitignore` 只影响 Git 的文件跟踪行为，不能限制 Agent 或构建工具读取本地文件。
+
+可将以下提示发送给 Agent：
+
+```text
+这个工作区是不含环境文件、凭据、备份和日志的部署副本。检查项目部署到 Cloudflare Workers 所需的公开配置。
+你可以读取 README.md、package.json、wrangler.jsonc 和 .env.example，运行 lint、类型检查和本地构建。
+不要访问项目目录之外的文件、凭据存储或 shell 历史记录。
+使用占位符列出需要我在本地终端执行的 Wrangler 登录、资源创建、secret put、远端数据库初始化和部署命令。
+在执行会修改 Cloudflare、D1、KV、R2 或 Algolia 的命令前停止，并等待我自行执行。
+不要索取、显示或保存密码、Session 密钥、Turnstile 密钥、Algolia Admin API Key 或 Cloudflare API Token。
 ```
-复制 .env.example 为 .env.local，将 SESSION_SECRET 设为随机字符串，ADMIN_PASSWORD 设为你的密码。
-创建项目所需的 Cloudflare 资源（D1、KV、R2）并更新 wrangler.jsonc 中的资源 ID。
-初始化 D1 数据库。
-通过 wrangler secret put 设置 SESSION_SECRET、ADMIN_PASSWORD、TURNSTILE_SECRET_KEY 生产密钥。
-最后执行 npm run cf:deploy 部署到 Cloudflare Workers。
+
+Agent 完成本地检查后，按照下方[手动部署](#手动部署)步骤创建资源并部署。`wrangler secret put` 不带密钥参数运行，按终端提示输入敏感值：
+
+```bash
+npx wrangler secret put SESSION_SECRET
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler secret put TURNSTILE_SECRET_KEY
 ```
 
-Agent 会自动完成以上步骤。当前 `cf:deploy` 脚本固定使用 `askbox.nekro.top` 自定义域名；如需部署到自己的域名或使用 `workers.dev`，请先调整 `package.json` 中的部署脚本。
+`.env.local` 已在 `.gitignore` 中排除。提交前使用 `git diff --cached --name-only` 检查将要提交的文件，确认其中没有环境文件、备份、日志或凭据。当前 `cf:deploy` 脚本固定使用 `askbox.nekro.top` 自定义域名；部署到其他域名或 `workers.dev` 前需调整 `package.json` 中的部署脚本。
+
+如果敏感值曾被发送到 Agent、聊天服务或公开日志，请在对应服务中撤销并重新生成这些凭据。删除聊天记录不能替代凭据轮换。
 
 > **搜索功能（可选）** 需要额外的 Algolia 配置，详见下方 [Algolia 搜索配置](#algolia-搜索配置可选)。
 
@@ -81,10 +109,12 @@ npm run db:remote  # 远端 D1（必须执行）
 ### 4. 设置生产密钥
 
 ```bash
-echo '你的SESSION_SECRET' | npx wrangler secret put SESSION_SECRET
-echo '你的ADMIN_PASSWORD' | npx wrangler secret put ADMIN_PASSWORD
-echo '你的TURNSTILE_SECRET_KEY' | npx wrangler secret put TURNSTILE_SECRET_KEY
+npx wrangler secret put SESSION_SECRET
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler secret put TURNSTILE_SECRET_KEY
 ```
+
+Wrangler 会依次提示输入密钥。请直接在提示中输入，不要把密钥放进命令参数或 shell 管道。
 
 > 开发模式 Turnstile 可留空；生产环境请务必在 Cloudflare Dashboard 创建 Turnstile widget 并填入密钥。
 
@@ -141,6 +171,7 @@ npx wrangler d1 migrations apply askbox-db --remote
 
 - `0002_add_site_appearance.sql`：添加主题色和顶栏、应用栏、卡片透明度字段
 - `0003_add_background_opacity.sql`：添加背景图片透明度字段
+- `0004_add_logo_settings.sql`：添加 Logo 地址及顶栏图片显示模式字段
 
 不要使用 `npm run db:remote` 代替版本化迁移。该命令执行完整 `db/schema.sql`，适合首次初始化；已有项目更新数据库结构时应使用 `db:migrate:remote`，避免把初始化流程和版本迁移混在一起。
 
@@ -194,7 +225,6 @@ curl -I https://你的域名/search?q=test
 - **限速保护**：同一 IP 每小时最多提交 **20** 个问题，超出限制返回提示
 - **Markdown 支持**：问题和回答均支持 Markdown 语法，含加粗、斜体、链接、列表等，自动渲染为规范格式
 - **快速复制**：点击公开展示页问答卡片一键复制问答内容，Snackbar 提示已复制
-- **自定义站点外观与文案**：管理员可修改站点名称、提问页标题、展示页标题、后台登录页标题、主题色、favicon、背景图片和页脚版权名称
 - **自定义 404 页面**：不存在的路径显示统一风格页面，并提供返回提问页入口
 
 ## 页面与路由
@@ -220,26 +250,24 @@ curl -I https://你的域名/search?q=test
 
 顶部搜索按钮会打开搜索对话框，`/search?q=关键词` 也提供独立搜索页面。公共页面和独立搜索页只返回已公开的问题；管理员登录后，后台页面顶部搜索对话框可以搜索全部状态的问题。公共导航中没有单独的搜索导航项。
 
-### 方式一：Agent 快速配置
+### 使用 Agent 配置公开参数
 
-在项目根目录向 Agent 发送：
+Application ID、Search-Only API Key 和 Index 名称会发送给浏览器，可作为公开配置交给 Agent。Admin API Key 具有索引写入权限，应由部署者保管。
 
+```text
+为项目配置 Algolia 的公开参数：
+Application ID 是 XXX，Search-Only API Key 是 XXX，Index 名称是 askbox。
+更新 wrangler.jsonc 中对应的公开 vars，并说明我需要手动写入 .env.local 的变量名。
+不要读取或修改 .env、.env.local 或 .env*.local，不要索取 Admin API Key，不要运行 secret put 或部署命令。
 ```
-配置 Algolia 搜索，我的 Application ID 是 XXX，
-Search-Only API Key 是 XXX，
-Admin API Key 是 XXX，
-Index 名称是 askbox。
+
+Agent 更新公开配置后，由部署者手动编辑 `.env.local`，再通过 Wrangler 的交互式提示保存 Admin API Key：
+
+```bash
+npx wrangler secret put ALGOLIA_ADMIN_API_KEY
 ```
 
-Agent 会自动完成：
-1. 在 `.env.local` 中添加四项 Algolia 环境变量
-2. 更新 `wrangler.jsonc` 的 `vars` 中添加三项公开变量
-3. 通过 `wrangler secret put` 设置 `ALGOLIA_ADMIN_API_KEY`
-4. 执行 `npm run cf:deploy` 重新部署
-
-你也可以在同一句话里指定其他的 Index 名称。
-
-### 方式二：手动配置
+### 手动配置
 
 1. 前往 [algolia.com](https://www.algolia.com/) 注册账号
 2. 进入 Dashboard → Settings → API Keys
@@ -280,7 +308,7 @@ ALGOLIA_ADMIN_API_KEY="你的 Admin API Key"
 #### 5. 设置 Admin API Key 为 Secret
 
 ```bash
-echo '你的 Admin API Key' | npx wrangler secret put ALGOLIA_ADMIN_API_KEY
+npx wrangler secret put ALGOLIA_ADMIN_API_KEY
 ```
 
 #### 6. 配置 Index 搜索属性（推荐）
@@ -310,14 +338,16 @@ npm run cf:deploy
 - 站点名称
 - 提问页、展示页和后台登录页标题
 - 全局页面主题色
-- 主页面头像（favicon）上传与更换
+- 顶部品牌展示方式（Logo / 头像）
+- 方形头像（favicon）上传与更换
+- 顶部 Logo 上传、更换与恢复默认
 - 全局背景图片上传、替换与清除
 - 页脚版权名称
 - 还原默认配置
 
-站点名称和页脚版权名称最多 80 个字符；三个页面标题最多 120 个字符；主题色必须为 `#RRGGBB` 格式。favicon 支持 PNG、JPG、WebP、ICO，最大 1MB；背景图片支持 PNG、JPG、WebP，最大 4MB。还原默认配置会重置以上文字和视觉设置，并删除已上传的 favicon、背景图片，但不会删除问题数据。
+站点名称和页脚版权名称最多 80 个字符；三个页面标题最多 120 个字符；主题色必须为 `#RRGGBB` 格式。方形头像支持 PNG、JPG、WebP、ICO，最大 1MB；Logo 支持 PNG、JPG、WebP，最大 2MB，不限制宽高比；背景图片支持 PNG、JPG、WebP，最大 4MB。还原默认配置会重置以上文字和视觉设置，并删除已上传的头像、自定义 Logo、背景图片，但不会删除问题数据。
 
-头像和背景图片使用现有 `ASKBOX_R2` 绑定，分别保存到 `site-assets/favicon/` 和 `site-assets/background/`，不需要创建新的 R2 bucket。设置记录保存于 D1 的 `site_settings` 表。
+头像、Logo 和背景图片使用现有 `ASKBOX_R2` 绑定，分别保存到 `site-assets/favicon/`、`site-assets/logo/` 和 `site-assets/background/`，不需要创建新的 R2 bucket。设置记录保存于 D1 的 `site_settings` 表。
 
 站点名称当前以 D1 中的设置为准，`SITE_NAME` 是旧版本遗留环境变量，不再控制运行时页面名称。已有部署如曾通过 `SITE_NAME` 设置过自定义名称，需要在 `/admin/settings` 中重新保存。用户协议和隐私政策中的站点名称来自设置，网址根据当前访问域名生成，不需要额外配置 `SITE_URL`。
 
@@ -338,6 +368,7 @@ npm run dev
 
 ```bash
 npm run dev        # 本地开发
+npm run lint       # ESLint 静态检查
 npm run build      # Next.js 构建
 npm run cf:build   # Cloudflare OpenNext 构建
 npm run cf:preview # 本地预览 Workers 产物
@@ -360,7 +391,7 @@ npm run db:migrate:local
 npm run db:migrate:remote
 ```
 
-当前仓库提供 `migrations/0002_add_site_appearance.sql` 和 `migrations/0003_add_background_opacity.sql`。`db:local` 只初始化本地 D1，`db:remote` 才会初始化 Cloudflare 远端 D1；`db:migrate:local` 和 `db:migrate:remote` 只应用尚未执行的版本化迁移。设置功能使用前必须确认目标环境已存在 `site_settings` 表；初始化和迁移不会删除问题数据，也不会创建新的 Cloudflare 资源。
+当前仓库提供 `migrations/0002_add_site_appearance.sql`、`migrations/0003_add_background_opacity.sql` 和 `migrations/0004_add_logo_settings.sql`。`db:local` 只初始化本地 D1，`db:remote` 才会初始化 Cloudflare 远端 D1；`db:migrate:local` 和 `db:migrate:remote` 只应用尚未执行的版本化迁移。设置功能使用前必须确认目标环境已存在 `site_settings` 表；初始化和迁移不会删除问题数据，也不会创建新的 Cloudflare 资源。
 
 ## 法律与隐私
 

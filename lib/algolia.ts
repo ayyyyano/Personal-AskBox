@@ -15,6 +15,8 @@ export type SearchResult = {
 };
 
 let client: { key: string; value: ReturnType<typeof algoliasearch> } | null = null;
+const pendingSearches = new Map<string, Promise<{ hits: SearchResult[] }>>();
+
 function getClient(config: AlgoliaConfig) {
   const key = `${config.appId}:${config.searchOnlyApiKey}`;
   if (!config.appId || !config.searchOnlyApiKey) return null;
@@ -31,9 +33,19 @@ export async function searchQuestions(query: string, filters?: string, config?: 
   const c = getClient(resolved);
   if (!c || !resolved.indexName) return { hits: [] as SearchResult[] };
 
-  const results = await c.search<SearchResult>({
+  const requestKey = `${resolved.appId}:${resolved.searchOnlyApiKey}:${resolved.indexName}:${filters ?? ""}:${query}`;
+  const existing = pendingSearches.get(requestKey);
+  if (existing) return existing;
+
+  const request = c.search<SearchResult>({
     requests: [{ indexName: resolved.indexName, query, filters, hitsPerPage: 20 }],
+  }).then((results) => {
+    const firstResult = results.results[0] as { hits?: SearchResult[] } | undefined;
+    return { hits: firstResult?.hits ?? [] };
+  }).finally(() => {
+    if (pendingSearches.get(requestKey) === request) pendingSearches.delete(requestKey);
   });
-  const firstResult = results.results[0] as { hits?: SearchResult[] } | undefined;
-  return { hits: firstResult?.hits ?? [] };
+
+  pendingSearches.set(requestKey, request);
+  return request;
 }

@@ -10,6 +10,9 @@ export const DEFAULT_SITE_SETTINGS = {
   primaryColor: "#DDAACC",
   faviconKey: null,
   faviconType: null,
+  logoKey: null,
+  logoType: null,
+  brandMode: "logo",
   backgroundKey: null,
   backgroundType: null,
   copyrightName: "Nekro",
@@ -20,6 +23,8 @@ export const DEFAULT_SITE_SETTINGS = {
   revision: 0,
 } as const;
 
+export type BrandMode = "logo" | "avatar";
+
 export type SiteSettings = {
   siteName: string;
   askTitle: string;
@@ -28,6 +33,9 @@ export type SiteSettings = {
   primaryColor: string;
   faviconKey: string | null;
   faviconType: string | null;
+  logoKey: string | null;
+  logoType: string | null;
+  brandMode: BrandMode;
   backgroundKey: string | null;
   backgroundType: string | null;
   copyrightName: string;
@@ -46,6 +54,9 @@ type SiteSettingsRow = {
   primary_color: string | null;
   favicon_key: string | null;
   favicon_type: string | null;
+  logo_key: string | null;
+  logo_type: string | null;
+  brand_mode: string | null;
   background_key: string | null;
   background_type: string | null;
   copyright_name: string | null;
@@ -70,6 +81,10 @@ function normalizeOpacity(value: number | null | undefined, fallback: number) {
   return Number.isFinite(opacity) ? Math.min(100, Math.max(0, Math.round(opacity))) : fallback;
 }
 
+function normalizeBrandMode(value: string | null | undefined): BrandMode {
+  return value === "avatar" ? "avatar" : DEFAULT_SITE_SETTINGS.brandMode;
+}
+
 export function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSettings {
   return {
     siteName: normalizeText(row?.site_name, DEFAULT_SITE_SETTINGS.siteName),
@@ -79,6 +94,9 @@ export function normalizeSiteSettings(row?: SiteSettingsRow | null): SiteSetting
     primaryColor: normalizeColor(row?.primary_color),
     faviconKey: row?.favicon_key ?? DEFAULT_SITE_SETTINGS.faviconKey,
     faviconType: row?.favicon_type ?? DEFAULT_SITE_SETTINGS.faviconType,
+    logoKey: row?.logo_key ?? DEFAULT_SITE_SETTINGS.logoKey,
+    logoType: row?.logo_type ?? DEFAULT_SITE_SETTINGS.logoType,
+    brandMode: normalizeBrandMode(row?.brand_mode),
     backgroundKey: row?.background_key ?? DEFAULT_SITE_SETTINGS.backgroundKey,
     backgroundType: row?.background_type ?? DEFAULT_SITE_SETTINGS.backgroundType,
     copyrightName: normalizeText(row?.copyright_name, DEFAULT_SITE_SETTINGS.copyrightName),
@@ -167,6 +185,9 @@ export async function updateSiteSettings(settings: SiteSettings) {
     settings.primaryColor,
     settings.faviconKey,
     settings.faviconType,
+    settings.logoKey,
+    settings.logoType,
+    settings.brandMode,
     settings.backgroundKey,
     settings.backgroundType,
     settings.copyrightName,
@@ -176,7 +197,7 @@ export async function updateSiteSettings(settings: SiteSettings) {
     settings.backgroundOpacity,
   ];
   await executeSettings(
-    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = ?, favicon_type = ?, background_key = ?, background_type = ?, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, background_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = ?, favicon_type = ?, logo_key = ?, logo_type = ?, brand_mode = ?, background_key = ?, background_type = ?, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, background_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
     params,
   );
   return { ...settings, revision: settings.revision + 1 };
@@ -186,13 +207,14 @@ export async function resetSiteSettings() {
   await ensureSettingsRow();
   const current = await getFreshSiteSettings();
   await executeSettings(
-    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = NULL, favicon_type = NULL, background_key = NULL, background_type = NULL, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, background_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+    "UPDATE site_settings SET site_name = ?, ask_title = ?, display_title = ?, admin_login_title = ?, primary_color = ?, favicon_key = NULL, favicon_type = NULL, logo_key = NULL, logo_type = NULL, brand_mode = ?, background_key = NULL, background_type = NULL, copyright_name = ?, top_bar_opacity = ?, navigation_opacity = ?, card_opacity = ?, background_opacity = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
     [
       DEFAULT_SITE_SETTINGS.siteName,
       DEFAULT_SITE_SETTINGS.askTitle,
       DEFAULT_SITE_SETTINGS.displayTitle,
       DEFAULT_SITE_SETTINGS.adminLoginTitle,
       DEFAULT_SITE_SETTINGS.primaryColor,
+      DEFAULT_SITE_SETTINGS.brandMode,
       DEFAULT_SITE_SETTINGS.copyrightName,
       DEFAULT_SITE_SETTINGS.topBarOpacity,
       DEFAULT_SITE_SETTINGS.navigationOpacity,
@@ -206,7 +228,7 @@ export async function resetSiteSettings() {
   };
 }
 
-export function siteAssetUrl(kind: "favicon" | "background", revision: number) {
+export function siteAssetUrl(kind: "favicon" | "logo" | "background", revision: number) {
   return `/api/site-assets/${kind}?v=${revision}`;
 }
 

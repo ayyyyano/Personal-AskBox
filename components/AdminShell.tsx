@@ -7,10 +7,11 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
   const authenticated = await isAdmin();
   const settings = await getSiteSettings();
   const faviconUrl = settings.faviconKey ? siteAssetUrl("favicon", settings.revision) : "/favicon.ico";
+  const logoUrl = settings.logoKey ? siteAssetUrl("logo", settings.revision) : "/logo.svg";
 
   return (
     <>
-      <Header admin={authenticated} title={settings.siteName} faviconUrl={faviconUrl} />
+      <Header admin={authenticated} title={settings.siteName} faviconUrl={faviconUrl} logoUrl={logoUrl} brandMode={settings.brandMode} />
       <PublicNavigation />
       <div className="page-content">{children}</div>
     </>

@@ -7,7 +7,7 @@
     "dev": "node scripts/next.mjs dev",
     "build": "node scripts/next.mjs build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && wrangler dev",
     "cf:deploy": "opennextjs-cloudflare build && wrangler deploy --domain askbox.nekro.top",
@@ -17,26 +17,26 @@
     "db:migrate:remote": "wrangler d1 migrations apply askbox-db --remote"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "4.20260620.1",
-    "@mdui/icons": "1.0.2",
-    "@opennextjs/cloudflare": "1.19.11",
-    "algoliasearch": "^5.55.1",
-    "marked": "^18.0.5",
-    "mdui": "2.1.4",
-    "nanoid": "5.1.5",
-    "next": "15.5.19",
-    "react": "19.1.2",
-    "react-dom": "19.1.2",
-    "zod": "3.25.76"
+    "@cloudflare/workers-types": "5.20261004.1",
+    "@mdui/icons": "1.0.4",
+    "@opennextjs/cloudflare": "1.20.8",
+    "algoliasearch": "^5.59.0",
+    "marked": "^18.0.14",
+    "mdui": "2.1.5",
+    "nanoid": "6.0.1",
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "@next/swc-wasm-nodejs": "15.5.19",
-    "@types/node": "22.15.32",
-    "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6",
-    "eslint": "9.29.0",
-    "eslint-config-next": "15.5.19",
-    "typescript": "5.8.3",
-    "wrangler": "4.103.0"
+    "@next/swc-wasm-nodejs": "16.3.8",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "typescript": "5.9.3",
+    "wrangler": "4.147.0"
   }
 }

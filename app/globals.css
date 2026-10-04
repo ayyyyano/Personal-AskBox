@@ -103,8 +103,31 @@ mdui-card {
 .brand {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 12px;
   font-weight: 700;
+}
+
+.brand--logo {
+  flex: 0 1 180px;
+}
+
+.brand-logo {
+  position: relative;
+  display: block;
+  width: min(180px, 32vw);
+  height: 44px;
+}
+
+.brand-logo img {
+  object-fit: contain;
+  object-position: left center;
+}
+
+.brand-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-actions {
@@ -118,14 +141,20 @@ mdui-card {
 }
 
 .brand-mark {
+  position: relative;
   display: grid;
   place-items: center;
+  flex: 0 0 40px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
   background: rgb(var(--mdui-color-primary));
   color: rgb(var(--mdui-color-on-primary));
+}
+
+.brand-mark img {
+  object-fit: cover;
 }
 
 .hero {
@@ -691,11 +720,49 @@ mdui-card {
 }
 
 .settings-preview {
+  position: relative;
   display: grid;
   place-items: center;
   overflow: hidden;
   border: 1px solid rgb(var(--mdui-color-outline-variant));
   background: rgb(var(--mdui-color-surface-container-high));
+}
+
+.settings-brand-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-brand-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border: 1px solid rgb(var(--mdui-color-outline-variant));
+  border-radius: 14px;
+  background: rgba(var(--mdui-color-surface-container), 0.5);
+}
+
+.settings-brand-option.is-selected {
+  border-color: rgb(var(--mdui-color-primary));
+  background: rgba(var(--mdui-color-primary-container), 0.45);
+}
+
+.settings-brand-option input {
+  margin: 3px 0 0;
+  accent-color: rgb(var(--mdui-color-primary));
+}
+
+.settings-brand-option span {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-brand-option small {
+  color: rgb(var(--mdui-color-on-surface-variant));
+  line-height: 1.4;
 }
 
 .settings-preview-avatar {
@@ -714,6 +781,17 @@ mdui-card {
   width: 160px;
   height: 64px;
   border-radius: 12px;
+}
+
+.settings-preview-logo {
+  width: 220px;
+  height: 80px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.settings-preview-logo img {
+  object-fit: contain;
 }
 
 .settings-preview-background img {
@@ -922,14 +1000,17 @@ mdui-text-field::part(container) {
     gap: 8px;
   }
 
-  .brand > span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .brand-logo {
+    width: min(132px, 34vw);
+    height: 40px;
   }
 
   .topbar-actions {
     flex-shrink: 0;
+  }
+
+  .settings-brand-options {
+    grid-template-columns: 1fr;
   }
 
   .hero {

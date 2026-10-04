@@ -1,7 +1,9 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function AdminLogin() {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -15,17 +17,22 @@ export function AdminLogin() {
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/admin/login", {
-      method: "POST",
-      body: form
-    });
-    if (response.ok) {
-      window.location.href = "/admin";
-      return;
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        body: form
+      });
+      if (response.ok) {
+        router.replace("/admin");
+        return;
+      }
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      setError(data?.error ?? "密码错误");
+    } catch {
+      setError("网络错误，请稍后重试");
+    } finally {
+      setBusy(false);
     }
-    const data = await response.json().catch(() => null) as { error?: string } | null;
-    setBusy(false);
-    setError(data?.error ?? "密码错误");
   }
 
   return (

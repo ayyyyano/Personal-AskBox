@@ -2,18 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareEnv } from "@/lib/cloudflare";
 import { getSiteSettings } from "@/lib/site-settings";
 
-const kinds = new Set(["favicon", "background"]);
+const kinds = new Set(["favicon", "logo", "background"]);
 const contentTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/x-icon", "image/vnd.microsoft.icon"]);
 
-type AssetKind = "favicon" | "background";
+type AssetKind = "favicon" | "logo" | "background";
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ kind: string }> }) {
   const { kind } = await context.params;
   if (!kinds.has(kind)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const settings = await getSiteSettings();
-  const key = kind === "favicon" ? settings.faviconKey : settings.backgroundKey;
-  const contentType = kind === "favicon" ? settings.faviconType : settings.backgroundType;
+  const asset = kind as AssetKind;
+  const key = asset === "favicon" ? settings.faviconKey : asset === "logo" ? settings.logoKey : settings.backgroundKey;
+  const contentType = asset === "favicon" ? settings.faviconType : asset === "logo" ? settings.logoType : settings.backgroundType;
   if (!key || !contentType || !contentTypes.has(contentType)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const env = await getCloudflareEnv();

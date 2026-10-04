@@ -1,14 +1,17 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from "react";
+import Image from "next/image";
 import { searchQuestions, type SearchResult } from "@/lib/algolia";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import type { AlgoliaConfig } from "@/lib/algolia-config";
+import type { BrandMode } from "@/lib/site-settings";
 import Link from "next/link";
 
 type Theme = "auto" | "light" | "dark";
 type MduiInputEvent = Event & { target: (EventTarget & { value?: string }) | null };
 
 const THEME_KEY = "mdui-theme";
+const THEME_EVENT = "askbox-theme-change";
 
 const nextTheme: Record<Theme, Theme> = {
   auto: "light",
@@ -22,14 +25,54 @@ const themeLabel: Record<Theme, string> = {
   dark: "深色模式",
 };
 
+function isTheme(value: string | null): value is Theme {
+  return value === "auto" || value === "light" || value === "dark";
+}
+
+function getThemeSnapshot(): Theme {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    return isTheme(saved) ? saved : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+function subscribeTheme(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(THEME_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(THEME_EVENT, onStoreChange);
+  };
+}
+
 function formatSearchTime(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value.replace(" ", "T") + "Z");
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export function Header({ admin = false, showSearch = true, title = "个人提问箱", faviconUrl = "/favicon.ico", algoliaConfig }: { admin?: boolean; showSearch?: boolean; title?: string; faviconUrl?: string; algoliaConfig?: AlgoliaConfig }) {
-  const [theme, setTheme] = useState<Theme>("auto");
+type HeaderProps = {
+  admin?: boolean;
+  showSearch?: boolean;
+  title?: string;
+  faviconUrl?: string;
+  logoUrl?: string;
+  brandMode?: BrandMode;
+  algoliaConfig?: AlgoliaConfig;
+};
+
+export function Header({
+  admin = false,
+  showSearch = true,
+  title = "个人提问箱",
+  faviconUrl = "/favicon.ico",
+  logoUrl = "/logo.svg",
+  brandMode = "logo",
+  algoliaConfig,
+}: HeaderProps) {
+  const theme = useSyncExternalStore<Theme>(subscribeTheme, getThemeSnapshot, () => "auto");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -37,6 +80,7 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
   const [searchError, setSearchError] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const searchFieldRef = useRef<HTMLElement>(null);
+  const searchRequestRef = useRef(0);
 
   useEffect(() => {
     import("@mdui/icons/light-mode.js");
@@ -47,12 +91,11 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
     import("@mdui/icons/question-answer.js");
     if (admin) import("@mdui/icons/logout.js");
 
-    const saved = localStorage.getItem(THEME_KEY) as Theme | null;
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.className = `mdui-theme-${saved}`;
-    }
   }, [admin]);
+
+  useEffect(() => {
+    document.documentElement.className = `mdui-theme-${theme}`;
+  }, [theme]);
 
   useEffect(() => {
     const el = dialogRef.current;
@@ -60,36 +103,59 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
     const handler = () => setSearchOpen(false);
     el.addEventListener("close", handler);
     return () => el.removeEventListener("close", handler);
-  }, [admin]);
+  }, []);
 
   useEffect(() => {
     const el = searchFieldRef.current;
     if (!el) return;
-    const handler = (e: Event) => setSearchQuery((e as MduiInputEvent).target?.value ?? "");
+    const handler = (e: Event) => {
+      const value = (e as MduiInputEvent).target?.value ?? "";
+      searchRequestRef.current += 1;
+      setSearchQuery(value);
+      if (!value.trim()) {
+        setSearchResults([]);
+        setSearchBusy(false);
+        setSearchError(false);
+      }
+    };
     el.addEventListener("input", handler);
     return () => el.removeEventListener("input", handler);
   }, []);
 
   const toggleTheme = () => {
     const next = nextTheme[theme];
-    setTheme(next);
     document.documentElement.className = `mdui-theme-${next}`;
-    localStorage.setItem(THEME_KEY, next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // The visual theme still changes when storage is unavailable.
+    }
+    window.dispatchEvent(new Event(THEME_EVENT));
   };
 
   const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setSearchResults([]); return; }
+    const requestId = ++searchRequestRef.current;
+    if (!q.trim()) {
+      setSearchResults([]);
+      setSearchBusy(false);
+      setSearchError(false);
+      return;
+    }
     setSearchBusy(true);
     setSearchError(false);
     try {
       const { hits } = await searchQuestions(q, admin ? undefined : "status:published", algoliaConfig);
+      if (requestId !== searchRequestRef.current) return;
       setSearchResults(hits);
     } catch (error) {
+      if (requestId !== searchRequestRef.current) return;
       console.error("Search failed:", error);
       setSearchResults([]);
       setSearchError(true);
     }
-    finally { setSearchBusy(false); }
+    finally {
+      if (requestId === searchRequestRef.current) setSearchBusy(false);
+    }
   }, [admin, algoliaConfig]);
 
   useEffect(() => {
@@ -97,17 +163,32 @@ export function Header({ admin = false, showSearch = true, title = "个人提问
     return () => clearTimeout(t);
   }, [searchQuery, doSearch]);
 
-  const openSearch = () => { setSearchOpen(true); setSearchQuery(""); setSearchResults([]); setSearchError(false); };
+  const openSearch = () => {
+    searchRequestRef.current += 1;
+    setSearchOpen(true);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchBusy(false);
+    setSearchError(false);
+  };
 
   return (
     <>
       <mdui-top-app-bar className="app-bar">
       <div className="shell topbar-inner">
-        <Link href={admin ? "/admin" : "/ask"} className="brand">
-          <span className="brand-mark">
-            <img src={faviconUrl} alt="" width="40" height="40" />
-          </span>
-          <span>{title}</span>
+        <Link href={admin ? "/admin" : "/ask"} className={`brand brand--${brandMode}`} aria-label={`${title}首页`}>
+          {brandMode === "logo" ? (
+            <span className="brand-logo">
+              <Image src={logoUrl} alt={title} fill sizes="(max-width: 768px) 120px, 180px" unoptimized />
+            </span>
+          ) : (
+            <>
+              <span className="brand-mark">
+                <Image src={faviconUrl} alt="" fill sizes="40px" unoptimized />
+              </span>
+              <span className="brand-title">{title}</span>
+            </>
+          )}
         </Link>
         <div className="topbar-actions">
           {admin ? (

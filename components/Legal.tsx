@@ -6,7 +6,7 @@ type LegalContentProps = {
 export function TermsContent({ siteName, siteUrl }: LegalContentProps) {
   return (
     <>
-      <p>欢迎使用 {siteName}（以下简称"本服务"），网址为 {siteUrl}。</p>
+      <p>欢迎使用 {siteName}（以下简称“本服务”），网址为 {siteUrl}。</p>
       <p>本服务为个人匿名提问平台，允许用户向网站管理者提交问题、留言或消息。当您访问或使用本服务时，即表示您已阅读、理解并同意遵守本协议之全部内容。</p>
 
       <h2>一、服务内容</h2>
@@ -44,7 +44,7 @@ export function TermsContent({ siteName, siteUrl }: LegalContentProps) {
       <p>匿名不代表完全无法识别。为维护服务安全、防止滥用及处理违规行为，本服务会记录部分技术信息（详见隐私政策）。</p>
 
       <h2>五、服务可用性</h2>
-      <p>本服务依"现状"提供，基于 Cloudflare Workers 运行。管理者不保证：</p>
+      <p>本服务依“现状”提供，基于 Cloudflare Workers 运行。管理者不保证：</p>
       <ul>
         <li>服务持续不中断</li>
         <li>服务完全无错误</li>
@@ -67,7 +67,7 @@ export function TermsContent({ siteName, siteUrl }: LegalContentProps) {
 export function PrivacyContent({ siteName, siteUrl }: LegalContentProps) {
   return (
     <>
-      <p>{siteName}（网址：{siteUrl}，以下简称"本服务"）重视用户隐私。本政策说明本服务收集、使用及保护信息的方式。使用本服务即表示同意本政策内容。</p>
+      <p>{siteName}（网址：{siteUrl}，以下简称“本服务”）重视用户隐私。本政策说明本服务收集、使用及保护信息的方式。使用本服务即表示同意本政策内容。</p>
 
       <h2>一、我们收集的信息</h2>
       <h3>1.1 用户主动提供的信息</h3>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import type { Question } from "@/lib/db";
 import { MarkdownContent } from "@/components/MarkdownContent";
@@ -11,10 +12,30 @@ const filterLabels: Record<string, string> = {
   all: "全部问题",
 };
 
+const pendingQuestionRequests = new Map<string, Promise<Question[]>>();
+
+function fetchQuestions(status: string) {
+  const existing = pendingQuestionRequests.get(status);
+  if (existing) return existing;
+
+  const request = fetch(`/api/questions?status=${status}`, { cache: "no-store" })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Questions request failed with ${response.status}`);
+      const data = (await response.json()) as { questions: Question[] };
+      return data.questions;
+    })
+    .finally(() => {
+      if (pendingQuestionRequests.get(status) === request) pendingQuestionRequests.delete(status);
+    });
+
+  pendingQuestionRequests.set(status, request);
+  return request;
+}
+
 export function AdminInbox() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [status, setStatus] = useState("pending");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [batchBusy, setBatchBusy] = useState(false);
   const [answerBusyId, setAnswerBusyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -23,6 +44,7 @@ export function AdminInbox() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const confirmRef = useRef<HTMLElement>(null);
   const operationRef = useRef<HTMLElement>(null);
+  const loadRequestRef = useRef(0);
 
   useEffect(() => {
     import("@mdui/icons/check.js");
@@ -47,18 +69,40 @@ export function AdminInbox() {
   }, []);
 
   async function load(nextStatus = status) {
+    const requestId = ++loadRequestRef.current;
     setBusy(true);
-    const response = await fetch(`/api/questions?status=${nextStatus}`, { cache: "no-store" });
-    setBusy(false);
-    if (response.ok) {
-      const data = (await response.json()) as { questions: Question[] };
-      setQuestions(data.questions);
+    try {
+      const nextQuestions = await fetchQuestions(nextStatus);
+      if (requestId !== loadRequestRef.current) return;
+      setQuestions(nextQuestions);
       setSelected(new Set());
+    } catch {
+      if (requestId === loadRequestRef.current) setOperationMessage("问题加载失败，请稍后重试。");
+    } finally {
+      if (requestId === loadRequestRef.current) setBusy(false);
     }
   }
 
   useEffect(() => {
-    load();
+    let active = true;
+    const requestId = ++loadRequestRef.current;
+
+    void fetchQuestions("pending")
+      .then((nextQuestions) => {
+        if (!active || requestId !== loadRequestRef.current) return;
+        setQuestions(nextQuestions);
+        setSelected(new Set());
+      })
+      .catch(() => {
+        if (active && requestId === loadRequestRef.current) setOperationMessage("问题加载失败，请稍后重试。");
+      })
+      .finally(() => {
+        if (active && requestId === loadRequestRef.current) setBusy(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function answer(id: string, form: HTMLFormElement) {
@@ -109,8 +153,17 @@ export function AdminInbox() {
   async function doDelete() {
     if (!deleteId) return;
     setDeleteId(null);
-    const response = await fetch(`/api/questions/${deleteId}`, { method: "DELETE" });
-    if (response.ok) await load();
+    try {
+      const response = await fetch(`/api/questions/${deleteId}`, { method: "DELETE" });
+      if (response.ok) {
+        setOperationMessage("问题已删除。");
+        await load();
+      } else {
+        setOperationMessage("删除失败，请稍后重试。");
+      }
+    } catch {
+      setOperationMessage("网络错误，问题未删除。");
+    }
   }
 
   return (
@@ -123,8 +176,9 @@ export function AdminInbox() {
                 key={item}
                 value={item}
                 onClick={() => {
+                  if (item === status) return;
                   setStatus(item);
-                  load(item);
+                  void load(item);
                 }}
               >
                 {filterLabels[item]}
@@ -163,7 +217,19 @@ export function AdminInbox() {
             </summary>
             <div className="admin-question-content">
               <p><MarkdownContent text={question.content} /></p>
-              {question.attachment_key ? <p><img src={`/api/questions/${question.id}/attachment`} alt="附件图片" className="admin-attachment" /></p> : null}
+              {question.attachment_key ? (
+                <p>
+                  <Image
+                    src={`/api/questions/${question.id}/attachment`}
+                    alt="附件图片"
+                    width={1280}
+                    height={720}
+                    sizes="(max-width: 768px) 100vw, 720px"
+                    className="admin-attachment"
+                    unoptimized
+                  />
+                </p>
+              ) : null}
               {question.answer ? <p className="muted">已答：<MarkdownContent text={question.answer} /></p> : null}
               <form className="form-stack" onSubmit={(event) => { event.preventDefault(); void answer(question.id, event.currentTarget); }}>
                 <mdui-text-field name="answer" label={question.answer ? "修改回答" : "回答"} variant="filled" rows="4" required value={question.answer ?? undefined} />

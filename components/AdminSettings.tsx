@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { syncFavicon } from "@/components/AppChrome";
 import type { SiteSettings } from "@/lib/site-settings";
 
-type Action = "update" | "favicon" | "background" | "remove-background" | "reset";
+type Action = "update" | "favicon" | "logo" | "remove-logo" | "background" | "remove-background" | "reset";
 
-function assetUrl(kind: "favicon" | "background", revision: number) {
+function assetUrl(kind: "favicon" | "logo" | "background", revision: number) {
   return `/api/site-assets/${kind}?v=${revision}`;
 }
 
@@ -19,6 +20,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const [displayTitle, setDisplayTitle] = useState(initialSettings.displayTitle);
   const [adminLoginTitle, setAdminLoginTitle] = useState(initialSettings.adminLoginTitle);
   const [primaryColor, setPrimaryColor] = useState(initialSettings.primaryColor);
+  const [brandMode, setBrandMode] = useState(initialSettings.brandMode);
   const [copyrightName, setCopyrightName] = useState(initialSettings.copyrightName);
   const [topBarOpacity, setTopBarOpacity] = useState(initialSettings.topBarOpacity);
   const [navigationOpacity, setNavigationOpacity] = useState(initialSettings.navigationOpacity);
@@ -27,9 +29,10 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const [busy, setBusy] = useState<Action | null>(null);
   const [feedback, setFeedback] = useState<{ title: string; message: string } | null>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const feedbackRef = useRef<HTMLElement>(null);
-  const hasUnsavedChanges = siteName !== settings.siteName || askTitle !== settings.askTitle || displayTitle !== settings.displayTitle || adminLoginTitle !== settings.adminLoginTitle || primaryColor !== settings.primaryColor || copyrightName !== settings.copyrightName || topBarOpacity !== settings.topBarOpacity || navigationOpacity !== settings.navigationOpacity || cardOpacity !== settings.cardOpacity || backgroundOpacity !== settings.backgroundOpacity;
+  const hasUnsavedChanges = siteName !== settings.siteName || askTitle !== settings.askTitle || displayTitle !== settings.displayTitle || adminLoginTitle !== settings.adminLoginTitle || primaryColor !== settings.primaryColor || brandMode !== settings.brandMode || copyrightName !== settings.copyrightName || topBarOpacity !== settings.topBarOpacity || navigationOpacity !== settings.navigationOpacity || cardOpacity !== settings.cardOpacity || backgroundOpacity !== settings.backgroundOpacity;
 
   useEffect(() => {
     const el = feedbackRef.current;
@@ -66,6 +69,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       form.set("displayTitle", displayTitle);
       form.set("adminLoginTitle", adminLoginTitle);
       form.set("primaryColor", primaryColor);
+      form.set("brandMode", brandMode);
       form.set("copyrightName", copyrightName);
       form.set("topBarOpacity", String(topBarOpacity));
       form.set("navigationOpacity", String(navigationOpacity));
@@ -89,6 +93,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
       setDisplayTitle(data.settings.displayTitle);
       setAdminLoginTitle(data.settings.adminLoginTitle);
       setPrimaryColor(data.settings.primaryColor);
+      setBrandMode(data.settings.brandMode);
       setCopyrightName(data.settings.copyrightName);
       setTopBarOpacity(data.settings.topBarOpacity);
       setNavigationOpacity(data.settings.navigationOpacity);
@@ -106,13 +111,13 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
     }
   }
 
-  function chooseFile(kind: "favicon" | "background", file: File | undefined) {
+  function chooseFile(kind: "favicon" | "logo" | "background", file: File | undefined) {
     if (!file) return;
     void submit(kind, file);
   }
 
   function resetSettings() {
-    if (window.confirm("确定要还原所有自定义设置吗？上传的头像和背景图也会被删除。")) {
+    if (window.confirm("确定要还原所有自定义设置吗？上传的头像、Logo 和背景图也会被删除。")) {
       void submit("reset");
     }
   }
@@ -270,20 +275,75 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
             <div className="settings-item-heading">
               <mdui-icon-image className="settings-item-icon"></mdui-icon-image>
               <div className="settings-item-copy">
-                <strong>主页面头像（favicon）</strong>
-                <span className="muted">显示在浏览器标签页和顶部品牌区域</span>
+                <strong>顶部品牌展示</strong>
+                <span className="muted">选择顶部导航显示横向 Logo，或显示方形头像与站点名称</span>
               </div>
             </div>
-            <span className="settings-item-current muted">支持 PNG、JPG、WEBP、ICO，最大 1MB</span>
+            <div className="settings-brand-options" role="radiogroup" aria-label="顶部品牌展示方式">
+              <label className={`settings-brand-option${brandMode === "logo" ? " is-selected" : ""}`}>
+                <input type="radio" name="brand-mode" value="logo" checked={brandMode === "logo"} onChange={() => setBrandMode("logo")} />
+                <span><strong>Logo</strong><small>完整显示默认或自定义 Logo</small></span>
+              </label>
+              <label className={`settings-brand-option${brandMode === "avatar" ? " is-selected" : ""}`}>
+                <input type="radio" name="brand-mode" value="avatar" checked={brandMode === "avatar"} onChange={() => setBrandMode("avatar")} />
+                <span><strong>头像</strong><small>显示方形头像与站点名称</small></span>
+              </label>
+            </div>
+            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+              <mdui-icon-save slot="icon"></mdui-icon-save>
+              保存展示方式
+            </mdui-button>
+          </div>
+        </mdui-card>
+
+        <mdui-card className="settings-card" variant="outlined">
+          <div className="settings-item-content">
+            <div className="settings-item-heading">
+              <mdui-icon-image className="settings-item-icon"></mdui-icon-image>
+              <div className="settings-item-copy">
+                <strong>方形头像与 favicon</strong>
+                <span className="muted">用于浏览器标签页；选择头像模式时也显示在顶部品牌区域</span>
+              </div>
+            </div>
+            <span className="settings-item-current muted">请上传方形图片；支持 PNG、JPG、WEBP、ICO，最大 1MB</span>
             <div className="settings-asset-controls">
               <div className="settings-preview settings-preview-avatar">
-                <img src={settings.faviconKey ? assetUrl("favicon", settings.revision) : "/favicon.ico"} alt="当前头像预览" />
+                <Image src={settings.faviconKey ? assetUrl("favicon", settings.revision) : "/favicon.ico"} alt="当前头像预览" fill sizes="48px" unoptimized />
               </div>
               <input ref={faviconInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/x-icon" hidden onChange={(event) => chooseFile("favicon", event.target.files?.[0])} />
               <mdui-button type="button" variant="outlined" disabled={busy !== null || undefined} loading={busy === "favicon" || undefined} onClick={() => faviconInputRef.current?.click()}>
                 <mdui-icon-upload-file slot="icon"></mdui-icon-upload-file>
                 上传并更换
               </mdui-button>
+            </div>
+          </div>
+        </mdui-card>
+
+        <mdui-card className="settings-card" variant="outlined">
+          <div className="settings-item-content">
+            <div className="settings-item-heading">
+              <mdui-icon-image className="settings-item-icon"></mdui-icon-image>
+              <div className="settings-item-copy">
+                <strong>顶部 Logo</strong>
+                <span className="muted">默认采用 Issue #1 提供的 Logo；自定义图片不限制比例，并会完整显示</span>
+              </div>
+            </div>
+            <span className="settings-item-current muted">支持 PNG、JPG、WEBP，最大 2MB</span>
+            <div className="settings-asset-controls">
+              <div className="settings-preview settings-preview-logo">
+                <Image src={settings.logoKey ? assetUrl("logo", settings.revision) : "/logo.svg"} alt="当前 Logo 预览" fill sizes="220px" unoptimized />
+              </div>
+              <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => chooseFile("logo", event.target.files?.[0])} />
+              <mdui-button type="button" variant="outlined" disabled={busy !== null || undefined} loading={busy === "logo" || undefined} onClick={() => logoInputRef.current?.click()}>
+                <mdui-icon-upload-file slot="icon"></mdui-icon-upload-file>
+                上传自定义 Logo
+              </mdui-button>
+              {settings.logoKey ? (
+                <mdui-button type="button" variant="text" disabled={busy !== null || undefined} loading={busy === "remove-logo" || undefined} onClick={() => submit("remove-logo")}>
+                  <mdui-icon-restore-page slot="icon"></mdui-icon-restore-page>
+                  恢复默认 Logo
+                </mdui-button>
+              ) : null}
             </div>
           </div>
         </mdui-card>
@@ -302,7 +362,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
             <div className="settings-asset-controls">
               {settings.backgroundKey ? (
                 <div className="settings-preview settings-preview-background">
-                  <img src={assetUrl("background", settings.revision)} alt="当前背景预览" />
+                  <Image src={assetUrl("background", settings.revision)} alt="当前背景预览" fill sizes="160px" unoptimized />
                 </div>
               ) : <span className="muted">未设置背景图片</span>}
               <input ref={backgroundInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => chooseFile("background", event.target.files?.[0])} />
@@ -352,10 +412,10 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
               <mdui-icon-restore-page className="settings-item-icon"></mdui-icon-restore-page>
               <div className="settings-item-copy">
                 <strong>还原默认配置</strong>
-                <span className="muted">主题色、头像、背景图片和版权名称均恢复为当前默认值</span>
+                <span className="muted">主题色、头像、Logo、品牌展示、背景图片和版权名称均恢复为当前默认值</span>
               </div>
             </div>
-            <span className="settings-item-current muted">此操作会删除已上传的站点头像和背景图片</span>
+            <span className="settings-item-current muted">此操作会删除已上传的站点头像、自定义 Logo 和背景图片</span>
             <mdui-button type="button" variant="outlined" disabled={busy !== null || undefined} loading={busy === "reset" || undefined} onClick={resetSettings}>
               <mdui-icon-restore-page slot="icon"></mdui-icon-restore-page>
               还原默认
