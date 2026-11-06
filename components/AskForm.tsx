@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-export function AskForm({ siteKey }: { siteKey: string }) {
+export function AskForm({ siteKey, disabled = false }: { siteKey: string; disabled?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ title: string; message: string } | null>(null);
   const [token, setToken] = useState("");
@@ -23,13 +23,24 @@ export function AskForm({ siteKey }: { siteKey: string }) {
   const turnstileRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const feedbackRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const field = contentRef.current;
+    const viewport = window.visualViewport;
+    if (!field || !viewport) return;
+    const update = () => field.style.setProperty("--askbox-editor-viewport-height", `${viewport.height}px`);
+    update();
+    viewport.addEventListener("resize", update);
+    return () => viewport.removeEventListener("resize", update);
+  }, []);
 
   useEffect(() => {
     const el = feedbackRef.current;
     if (!el) return;
     const handler = () => setFeedback(null);
-    el.addEventListener("close", handler);
-    return () => el.removeEventListener("close", handler);
+    el.addEventListener("closed", handler);
+    return () => el.removeEventListener("closed", handler);
   }, [feedback]);
 
   useEffect(() => {
@@ -70,6 +81,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (disabled || busy) return;
     const formEl = event.currentTarget;
     const content = String(new FormData(formEl).get("content") ?? "").trim();
     if (content.length < 5) {
@@ -115,7 +127,6 @@ export function AskForm({ siteKey }: { siteKey: string }) {
   function closeFeedback() {
     const dialog = feedbackRef.current as (HTMLElement & { open?: boolean }) | null;
     if (dialog) dialog.open = false;
-    setFeedback(null);
   }
 
   const feedbackDialog = feedback ? (
@@ -130,8 +141,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
       <mdui-text-field name="nickname" label="昵称 (可选)" maxlength="40" variant="filled" clearable>
         <mdui-icon-alternate-email slot="icon"></mdui-icon-alternate-email>
       </mdui-text-field>
-      <mdui-text-field name="content" label="想问什么? (支持 Markdown)" variant="filled" required rows="7" maxlength="1000" counter />
-      <mdui-divider className="visually-hidden-divider"></mdui-divider>
+      <mdui-text-field ref={contentRef} className="ask-content-field" name="content" label="想问什么? (支持 Markdown)" variant="filled" required autosize min-rows="3" max-rows="12" maxlength="1000" counter />
       <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setFile(e.target.files?.[0] ?? null)} hidden />
       <mdui-button className="full-width-button" variant="outlined" full-width onClick={() => fileInputRef.current?.click()}>
         <mdui-icon-attachment slot="icon"></mdui-icon-attachment>
@@ -147,7 +157,7 @@ export function AskForm({ siteKey }: { siteKey: string }) {
           </mdui-button>
         )
       ) : null}
-      <mdui-button className="full-width-button" type="submit" loading={busy || undefined} full-width>
+      <mdui-button className="full-width-button" type="submit" disabled={disabled || busy || undefined} loading={busy || undefined} full-width>
         <mdui-icon-arrow-forward slot="end-icon"></mdui-icon-arrow-forward>
         发送问题
       </mdui-button>

@@ -4,7 +4,9 @@
   color-scheme: light dark;
   --page-max: 1040px;
   --app-bar-height: 64px;
-  --navigation-rail-width: 81px;
+  --navigation-sidebar-width: 240px;
+  --navigation-sidebar-padding: 12px;
+  --desktop-edge-inset: calc(var(--navigation-sidebar-padding) + 16px);
   --navigation-bar-height: 80px;
   --mdui-color-primary-light: var(--askbox-primary-light-rgb, 221, 170, 204);
   --mdui-color-primary-dark: var(--askbox-primary-dark-rgb, 221, 170, 204);
@@ -27,17 +29,16 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   position: relative;
   isolation: isolate;
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(var(--mdui-color-primary), 0.08), transparent 32rem),
-    linear-gradient(180deg, rgb(var(--mdui-color-surface-container-low)) 0%, rgb(var(--mdui-color-surface)) 52%);
-  background-position: top left, center;
-  background-repeat: no-repeat;
-  background-size: auto, auto;
+  background: rgb(var(--mdui-color-surface));
   color: rgb(var(--mdui-color-on-surface));
   font-family: var(--mdui-typescale-body-large-font), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -63,6 +64,14 @@ body::after {
   content: "";
   pointer-events: none;
   background: rgba(var(--mdui-color-surface), 0.12);
+}
+
+:root:not([data-askbox-background]) body::after {
+  display: none;
+}
+
+:root:not([data-askbox-background]) :is(.app-bar, .navigation-sidebar, .not-found-card) {
+  background-color: rgb(var(--mdui-color-surface)) !important;
 }
 
 a {
@@ -165,21 +174,28 @@ mdui-card {
   padding: 32px 0 56px;
 }
 
-.split-page {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
-  gap: clamp(24px, 5vw, 64px);
-  align-items: center;
-}
-
-.split-page .page-intro {
-  padding-bottom: 0;
-}
-
-.split-page .panel {
+.ask-page {
   width: 100%;
+  max-width: 760px;
+}
+
+.ask-page .form-panel {
   max-width: none;
-  justify-self: end;
+}
+
+.form-panel-title {
+  margin: 0 0 20px;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.2;
+}
+
+.display-page {
+  width: 100%;
+  max-width: 880px;
+}
+
+.display-page .published {
+  max-width: 840px;
 }
 
 .page-content {
@@ -382,6 +398,16 @@ mdui-card {
   gap: 16px;
 }
 
+.ask-content-field {
+  margin-bottom: 12px;
+}
+
+.ask-content-field::part(input) {
+  min-height: 120px !important;
+  max-height: 320px !important;
+  overflow-y: auto;
+}
+
 .full-width-button {
   width: 100%;
 }
@@ -389,10 +415,6 @@ mdui-card {
 .turnstile-container {
   display: flex;
   justify-content: center;
-}
-
-.visually-hidden-divider {
-  opacity: 0;
 }
 
 .published {
@@ -534,8 +556,13 @@ mdui-card {
   padding-bottom: 54px;
 }
 
-.admin-page-intro {
-  padding-top: 0;
+.admin-login-page {
+  width: 100%;
+  max-width: 720px;
+}
+
+.admin-login-page .admin-login-card {
+  margin: 0 auto;
 }
 
 .admin-menu {
@@ -543,14 +570,6 @@ mdui-card {
   margin-right: auto;
   margin-left: auto;
   max-width: 760px;
-}
-
-.admin-menu .section-heading {
-  margin-bottom: 32px;
-}
-
-.admin-menu .section-heading .eyebrow {
-  margin-bottom: 12px;
 }
 
 .admin-menu-link {
@@ -568,19 +587,6 @@ mdui-card {
   padding-bottom: 64px;
 }
 
-.settings-header {
-  max-width: 720px;
-  padding-bottom: 24px;
-}
-
-.settings-header .page-title {
-  margin-bottom: 12px;
-}
-
-.settings-header .lede {
-  margin: 0;
-}
-
 .settings-list {
   display: grid;
   gap: 12px;
@@ -591,6 +597,10 @@ mdui-card {
   margin: 20px 0 0;
   color: rgb(var(--mdui-color-on-surface));
   font-size: 1.1rem;
+}
+
+.settings-section-title:first-child {
+  margin-top: 0;
 }
 
 .settings-card {
@@ -665,15 +675,8 @@ mdui-card {
   gap: 12px;
 }
 
-.settings-title-fields {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
 .settings-color-controls mdui-text-field,
-.settings-text-controls mdui-text-field,
-.settings-title-fields mdui-text-field {
+.settings-text-controls mdui-text-field {
   flex: 1 1 280px;
   width: 100%;
   min-width: 0;
@@ -853,7 +856,7 @@ mdui-card {
   line-height: 1.8;
 }
 
-.navigation-rail {
+.navigation-sidebar {
   display: none;
 }
 
@@ -861,13 +864,26 @@ mdui-card {
   display: none;
 }
 
-.navigation-rail mdui-navigation-rail {
-  top: 0;
-  bottom: 0;
-  height: auto;
+.navigation-sidebar {
   background-color: rgba(var(--mdui-color-surface), var(--askbox-navigation-opacity)) !important;
   -webkit-backdrop-filter: blur(var(--askbox-glass-blur));
   backdrop-filter: blur(var(--askbox-glass-blur));
+}
+
+.navigation-sidebar mdui-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+}
+
+.navigation-sidebar mdui-list-item {
+  min-height: 56px;
+}
+
+.navigation-sidebar mdui-list-item:focus-within {
+  outline: 2px solid rgb(var(--mdui-color-primary));
+  outline-offset: 2px;
+  border-radius: var(--mdui-shape-corner-extra-large);
 }
 
 .navigation-bar mdui-navigation-bar {
@@ -961,8 +977,7 @@ footer.shell {
 }
 
 .settings-card .settings-color-controls mdui-text-field,
-.settings-card .settings-text-controls mdui-text-field,
-.settings-card .settings-title-fields mdui-text-field {
+.settings-card .settings-text-controls mdui-text-field {
   --mdui-color-background: var(--settings-card-background);
 }
 
@@ -971,6 +986,11 @@ mdui-text-field::part(container) {
 }
 
 @media (max-width: 768px) {
+  .ask-content-field::part(input) {
+    min-height: 72px !important;
+    max-height: clamp(96px, calc(var(--askbox-editor-viewport-height, 100dvh) * 0.3), 240px) !important;
+  }
+
   .shell {
     padding-right: 16px;
     padding-left: 16px;
@@ -1018,17 +1038,6 @@ mdui-text-field::part(container) {
     padding-top: 8px;
   }
 
-  .split-page {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    align-items: start;
-  }
-
-  .split-page .panel {
-    max-width: 560px;
-    justify-self: center;
-  }
-
   .admin-login-card {
     justify-self: center;
   }
@@ -1056,10 +1065,6 @@ mdui-text-field::part(container) {
     padding: 16px;
   }
 
-  .settings-title-fields {
-    grid-template-columns: 1fr;
-  }
-
   .page-title {
     font-size: clamp(2rem, 11vw, 3.2rem);
   }
@@ -1070,37 +1075,21 @@ mdui-text-field::part(container) {
 
 }
 
-@media (min-width: 769px) and (max-width: 960px) {
-  .split-page {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-
-  .split-page .panel {
-    max-width: 560px;
-    justify-self: center;
-  }
-}
-
 @media (min-width: 769px) {
   body {
-    padding-left: var(--navigation-rail-width);
+    padding-left: var(--navigation-sidebar-width);
   }
 
-  .navigation-rail {
+  .navigation-sidebar {
     display: block;
     position: fixed;
     z-index: 2000;
     top: var(--app-bar-height);
     bottom: 0;
     left: 0;
-    width: var(--navigation-rail-width);
-  }
-
-  .navigation-rail mdui-navigation-rail {
-    top: 0;
-    height: 100%;
+    width: var(--navigation-sidebar-width);
+    padding: 24px var(--navigation-sidebar-padding);
+    overflow-y: auto;
   }
 
   .page-content {
@@ -1113,6 +1102,17 @@ mdui-text-field::part(container) {
 
   .app-bar {
     left: 0;
+    padding-inline: 0;
+  }
+
+  .app-bar .topbar-inner {
+    width: 100%;
+    margin: 0;
+    padding-inline: var(--desktop-edge-inset);
+  }
+
+  .topbar-inner .brand {
+    max-width: calc(var(--navigation-sidebar-width) - 2 * var(--desktop-edge-inset));
   }
 
   footer.shell {

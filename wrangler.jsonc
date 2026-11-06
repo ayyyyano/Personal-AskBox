@@ -1,12 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "personal-askbox",
-  "main": ".open-next/worker.js",
+  "main": "workers/entry.mjs",
   "compatibility_date": "2026-06-20",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "run_worker_first": false,
+    "html_handling": "none"
   },
   "observability": {
     "enabled": true

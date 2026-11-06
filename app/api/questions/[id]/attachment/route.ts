@@ -23,13 +23,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   if (!object) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const blob = await object.blob();
-  const buffer = await blob.arrayBuffer();
-  return new NextResponse(buffer, {
+  return new Response(object.body as ReadableStream, {
     status: 200,
     headers: {
-      "Content-Type": blob.type,
-      "Cache-Control": "public, max-age=31536000, immutable"
+      "Content-Type": object.httpMetadata?.contentType ?? "application/octet-stream",
+      "Cache-Control": admin ? "private, no-store" : "public, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff"
     }
   });
 }

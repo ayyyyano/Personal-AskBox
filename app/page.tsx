@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { PublicHome } from "@/components/PublicHome";
 
-export default async function HomePage() {
-  redirect("/ask");
+export default function HomePage() {
+  return <PublicHome />;
 }

@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
-import type { Question } from "@/lib/db";
+import type { PublishedQuestion } from "@/lib/db";
 import { MarkdownContent } from "@/components/MarkdownContent";
 
 function formatTime(dbTime: string | null) {
@@ -10,7 +10,7 @@ function formatTime(dbTime: string | null) {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-export function PublishedList({ questions }: { questions: Question[] }) {
+export function PublishedList({ questions }: { questions: PublishedQuestion[] }) {
   const [snackMessage, setSnackMessage] = useState("");
   const snackRef = useRef<HTMLElement>(null);
 
@@ -26,7 +26,7 @@ export function PublishedList({ questions }: { questions: Question[] }) {
     (el as HTMLElement & { open?: boolean }).open = true;
   }, [snackMessage]);
 
-  async function copyCard(question: Question) {
+  async function copyCard(question: PublishedQuestion) {
     const text = `Q: ${question.content}\nA: ${question.answer}`;
     try {
       await navigator.clipboard.writeText(text);

@@ -23,7 +23,7 @@ export function AdminLogin() {
         body: form
       });
       if (response.ok) {
-        router.replace("/admin");
+        router.refresh();
         return;
       }
       const data = await response.json().catch(() => null) as { error?: string } | null;

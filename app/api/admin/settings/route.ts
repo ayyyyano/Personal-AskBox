@@ -86,8 +86,6 @@ export async function POST(request: NextRequest) {
     const brandMode = String(form.get("brandMode") ?? current.brandMode).trim();
     const siteName = String(form.get("siteName") ?? current.siteName).trim();
     const askTitle = String(form.get("askTitle") ?? current.askTitle).trim();
-    const displayTitle = String(form.get("displayTitle") ?? current.displayTitle).trim();
-    const adminLoginTitle = String(form.get("adminLoginTitle") ?? current.adminLoginTitle).trim();
     const copyrightName = String(form.get("copyrightName") ?? current.copyrightName).trim();
     const topBarOpacity = String(form.get("topBarOpacity") ?? current.topBarOpacity).trim();
     const navigationOpacity = String(form.get("navigationOpacity") ?? current.navigationOpacity).trim();
@@ -96,8 +94,8 @@ export async function POST(request: NextRequest) {
     if (!colorPattern.test(primaryColor)) throw new Error("主题色必须是 #RRGGBB 格式。");
     if (brandMode !== "logo" && brandMode !== "avatar") throw new Error("顶部品牌展示方式无效。");
     if (!siteNamePattern.test(siteName)) throw new Error("站点名称长度必须为 1 到 80 个字符。");
-    if (!customTitlePattern.test(askTitle) || !customTitlePattern.test(displayTitle) || !customTitlePattern.test(adminLoginTitle)) {
-      throw new Error("自定义标题长度必须为 1 到 120 个字符。");
+    if (!customTitlePattern.test(askTitle)) {
+      throw new Error("首页提问文案长度必须为 1 到 120 个字符。");
     }
     if (!copyrightPattern.test(copyrightName)) throw new Error("页脚名称长度必须为 1 到 80 个字符。");
     if (!opacityPattern.test(topBarOpacity) || !opacityPattern.test(navigationOpacity) || !opacityPattern.test(cardOpacity) || !opacityPattern.test(backgroundOpacity)) {
@@ -108,8 +106,6 @@ export async function POST(request: NextRequest) {
       ...current,
       siteName,
       askTitle,
-      displayTitle,
-      adminLoginTitle,
       primaryColor: primaryColor.toUpperCase(),
       brandMode,
       copyrightName,

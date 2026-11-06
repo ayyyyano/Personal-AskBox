@@ -6,6 +6,7 @@ import { MarkdownContent } from "@/components/MarkdownContent";
 import type { AlgoliaConfig } from "@/lib/algolia-config";
 import type { BrandMode } from "@/lib/site-settings";
 import Link from "next/link";
+import { usePublicSearchQuery } from "@/lib/public-view";
 
 type Theme = "auto" | "light" | "dark";
 type MduiInputEvent = Event & { target: (EventTarget & { value?: string }) | null };
@@ -74,13 +75,26 @@ export function Header({
 }: HeaderProps) {
   const theme = useSyncExternalStore<Theme>(subscribeTheme, getThemeSnapshot, () => "auto");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const initialQuery = usePublicSearchQuery();
+  const [searchQueryOverride, setSearchQuery] = useState<string | null>(null);
+  const searchQuery = searchQueryOverride ?? initialQuery;
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchBusy, setSearchBusy] = useState(false);
   const [searchError, setSearchError] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const searchFieldRef = useRef<HTMLElement>(null);
   const searchRequestRef = useRef(0);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("q")) {
+      url.searchParams.delete("q");
+      window.history.replaceState(null, "", url);
+      window.dispatchEvent(new Event("popstate"));
+    }
+  }, []);
 
   useEffect(() => {
     import("@mdui/icons/light-mode.js");
@@ -100,10 +114,10 @@ export function Header({
   useEffect(() => {
     const el = dialogRef.current;
     if (!el) return;
-    const handler = () => setSearchOpen(false);
+    const handler = closeSearch;
     el.addEventListener("close", handler);
     return () => el.removeEventListener("close", handler);
-  }, []);
+  }, [closeSearch]);
 
   useEffect(() => {
     const el = searchFieldRef.current;
@@ -176,10 +190,10 @@ export function Header({
     <>
       <mdui-top-app-bar className="app-bar">
       <div className="shell topbar-inner">
-        <Link href={admin ? "/admin" : "/ask"} className={`brand brand--${brandMode}`} aria-label={`${title}首页`}>
+        <Link href={admin ? "/admin" : "/"} prefetch={false} className={`brand brand--${brandMode}`} aria-label={`${title}首页`}>
           {brandMode === "logo" ? (
             <span className="brand-logo">
-              <Image src={logoUrl} alt={title} fill sizes="(max-width: 768px) 120px, 180px" unoptimized />
+              <Image src={logoUrl} alt={title} fill sizes="(max-width: 768px) 120px, 180px" loading="eager" unoptimized />
             </span>
           ) : (
             <>
@@ -221,7 +235,7 @@ export function Header({
 
       </mdui-top-app-bar>
 
-      <mdui-dialog className="search-dialog" ref={dialogRef} open={searchOpen || undefined} headline="搜索问题">
+      <mdui-dialog className="search-dialog" ref={dialogRef} open={searchOpen || Boolean(initialQuery) || undefined} headline="搜索问题">
         <div className="search-field-wrap">
           <mdui-text-field ref={searchFieldRef} value={searchQuery} placeholder="输入关键词…" variant="filled" clearable helper="由 Algolia 提供搜索" autofocus>
             <mdui-icon-search slot="icon"></mdui-icon-search>
@@ -250,7 +264,7 @@ export function Header({
         ) : searchQuery.trim() ? (
           <p className="search-empty-state muted">没有找到相关问题。</p>
         ) : null}
-        <mdui-button slot="action" variant="text" type="button" onClick={() => setSearchOpen(false)}>关闭</mdui-button>
+        <mdui-button slot="action" variant="text" type="button" onClick={closeSearch}>关闭</mdui-button>
       </mdui-dialog>
     </>
   );

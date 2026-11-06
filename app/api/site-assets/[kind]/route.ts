@@ -22,8 +22,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ ki
   const object = await env.ASKBOX_R2.get(key);
   if (!object) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const buffer = await object.arrayBuffer();
-  return new NextResponse(buffer, {
+  return new Response(object.body as ReadableStream, {
     headers: {
       "Content-Type": contentType,
       "Cache-Control": `public, max-age=31536000, immutable`,

@@ -1,19 +1,12 @@
 import { AdminMenu } from "@/components/AdminMenu";
 import { AdminLogin } from "@/components/AdminLogin";
 import { isAdmin } from "@/lib/auth";
-import { getSiteSettings } from "@/lib/site-settings";
 
 export default async function AdminPage() {
   const ok = await isAdmin();
   if (!ok) {
-    const settings = await getSiteSettings();
     return (
-      <main className="shell page-main admin-content split-page">
-        <section className="page-intro admin-page-intro">
-          <p className="eyebrow">管理后台</p>
-          <h1 className="page-title">{settings.adminLoginTitle}</h1>
-          <p className="lede">登录后查看收到的问题，并管理公开展示内容。</p>
-        </section>
+      <main className="shell page-main admin-content admin-login-page" aria-label="管理员登录">
         <div className="admin-login-card">
           <AdminLogin />
         </div>
@@ -22,7 +15,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <main className="shell page-main admin-content">
+    <main className="shell page-main admin-content" aria-label="管理后台">
       <AdminMenu />
     </main>
   );

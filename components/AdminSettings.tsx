@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { syncFavicon } from "@/components/AppChrome";
+import { publishSiteSettings } from "@/components/SiteProvider";
 import type { SiteSettings } from "@/lib/site-settings";
 
 type Action = "update" | "favicon" | "logo" | "remove-logo" | "background" | "remove-background" | "reset";
@@ -17,8 +18,6 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const [settings, setSettings] = useState(initialSettings);
   const [siteName, setSiteName] = useState(initialSettings.siteName);
   const [askTitle, setAskTitle] = useState(initialSettings.askTitle);
-  const [displayTitle, setDisplayTitle] = useState(initialSettings.displayTitle);
-  const [adminLoginTitle, setAdminLoginTitle] = useState(initialSettings.adminLoginTitle);
   const [primaryColor, setPrimaryColor] = useState(initialSettings.primaryColor);
   const [brandMode, setBrandMode] = useState(initialSettings.brandMode);
   const [copyrightName, setCopyrightName] = useState(initialSettings.copyrightName);
@@ -32,7 +31,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const feedbackRef = useRef<HTMLElement>(null);
-  const hasUnsavedChanges = siteName !== settings.siteName || askTitle !== settings.askTitle || displayTitle !== settings.displayTitle || adminLoginTitle !== settings.adminLoginTitle || primaryColor !== settings.primaryColor || brandMode !== settings.brandMode || copyrightName !== settings.copyrightName || topBarOpacity !== settings.topBarOpacity || navigationOpacity !== settings.navigationOpacity || cardOpacity !== settings.cardOpacity || backgroundOpacity !== settings.backgroundOpacity;
+  const hasUnsavedChanges = siteName !== settings.siteName || askTitle !== settings.askTitle || primaryColor !== settings.primaryColor || brandMode !== settings.brandMode || copyrightName !== settings.copyrightName || topBarOpacity !== settings.topBarOpacity || navigationOpacity !== settings.navigationOpacity || cardOpacity !== settings.cardOpacity || backgroundOpacity !== settings.backgroundOpacity;
 
   useEffect(() => {
     const el = feedbackRef.current;
@@ -46,7 +45,6 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
     import("@mdui/icons/palette.js");
     import("@mdui/icons/opacity.js");
     import("@mdui/icons/title.js");
-    import("@mdui/icons/text-fields.js");
     import("@mdui/icons/image.js");
     import("@mdui/icons/wallpaper.js");
     import("@mdui/icons/copyright.js");
@@ -66,8 +64,6 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
     if (action === "update") {
       form.set("siteName", siteName);
       form.set("askTitle", askTitle);
-      form.set("displayTitle", displayTitle);
-      form.set("adminLoginTitle", adminLoginTitle);
       form.set("primaryColor", primaryColor);
       form.set("brandMode", brandMode);
       form.set("copyrightName", copyrightName);
@@ -85,13 +81,12 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
         return;
       }
       setSettings(data.settings);
+      publishSiteSettings(data.settings);
       if (action === "favicon") {
         syncFavicon(assetUrl("favicon", data.settings.revision));
       }
       setSiteName(data.settings.siteName);
       setAskTitle(data.settings.askTitle);
-      setDisplayTitle(data.settings.displayTitle);
-      setAdminLoginTitle(data.settings.adminLoginTitle);
       setPrimaryColor(data.settings.primaryColor);
       setBrandMode(data.settings.brandMode);
       setCopyrightName(data.settings.copyrightName);
@@ -129,13 +124,7 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
   }
 
   return (
-    <section className="settings-page" aria-labelledby="admin-settings-title">
-      <header className="settings-header">
-        <p className="eyebrow">站点外观</p>
-        <h1 id="admin-settings-title" className="page-title">自定义设置</h1>
-        <p className="lede">逐项调整公开页面的外观和署名。修改会应用到前台与管理后台。</p>
-      </header>
-
+    <section className="settings-page" aria-label="自定义设置">
       <div className="settings-list">
         <h2 id="settings-content" className="settings-section-title">基础内容</h2>
         <mdui-card className="settings-card" variant="outlined">
@@ -197,43 +186,20 @@ export function AdminSettings({ initialSettings }: { initialSettings: SiteSettin
 
         <mdui-card className="settings-card" variant="outlined">
           <div className="settings-item-content">
-            <div className="settings-item-heading">
-              <mdui-icon-text-fields className="settings-item-icon"></mdui-icon-text-fields>
-              <div className="settings-item-copy">
-                <strong>页面标题</strong>
-                <span className="muted">自定义提问页、展示页和后台登录页的主标题</span>
-              </div>
-            </div>
-            <div className="settings-title-fields">
+            <div className="settings-text-controls">
               <mdui-text-field
                 value={askTitle}
-                label="提问页标题"
+                label="首页提问文案"
                 placeholder="有什么想问的吗？"
                 variant="filled"
                 maxlength="120"
                 onInput={(event) => setAskTitle((event.target as HTMLInputElement | null)?.value ?? "")}
               />
-              <mdui-text-field
-                value={displayTitle}
-                label="展示页标题"
-                placeholder="来看看回答吧。"
-                variant="filled"
-                maxlength="120"
-                onInput={(event) => setDisplayTitle((event.target as HTMLInputElement | null)?.value ?? "")}
-              />
-              <mdui-text-field
-                value={adminLoginTitle}
-                label="后台登录页标题"
-                placeholder="别来无恙啊！"
-                variant="filled"
-                maxlength="120"
-                onInput={(event) => setAdminLoginTitle((event.target as HTMLInputElement | null)?.value ?? "")}
-              />
+              <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
+                <mdui-icon-save slot="icon"></mdui-icon-save>
+                保存文案
+              </mdui-button>
             </div>
-            <mdui-button type="button" variant="tonal" disabled={!hasUnsavedChanges || busy !== null || undefined} loading={busy === "update" || undefined} onClick={() => submit("update")}>
-              <mdui-icon-save slot="icon"></mdui-icon-save>
-              保存标题
-            </mdui-button>
           </div>
         </mdui-card>
 

@@ -24,6 +24,8 @@ export type Question = {
   published_at: string | null;
 };
 
+export type PublishedQuestion = Pick<Question, "id" | "nickname" | "content" | "answer" | "attachment_key" | "created_at" | "answered_at" | "published_at">;
+
 async function d1Query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
   const env = await getCloudflareEnv();
   if (env.DB) {
@@ -80,9 +82,9 @@ export async function listQuestions(status?: string): Promise<Question[]> {
   return d1Query<Question>("SELECT * FROM questions ORDER BY created_at DESC LIMIT 100");
 }
 
-export async function listPublishedQuestions(): Promise<Question[]> {
-  return d1Query<Question>(
-    "SELECT * FROM questions WHERE status = 'published' ORDER BY published_at DESC LIMIT 50"
+export async function listPublishedQuestions(): Promise<PublishedQuestion[]> {
+  return d1Query<PublishedQuestion>(
+    "SELECT id, nickname, content, answer, attachment_key, created_at, answered_at, published_at FROM questions WHERE status = 'published' ORDER BY published_at DESC LIMIT 50"
   );
 }
 

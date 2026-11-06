@@ -2,9 +2,10 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { navigatePublicView, usePublicView } from "@/lib/public-view";
 
 type NavigationItem = {
-  value: string;
+  value: "ask" | "display" | "admin";
   label: string;
   href: string;
 };
@@ -13,12 +14,12 @@ const publicItems: NavigationItem[] = [
   {
     value: "ask",
     label: "提问",
-    href: "/ask",
+    href: "/",
   },
   {
     value: "display",
     label: "展示",
-    href: "/display",
+    href: "/#display",
   },
   {
     value: "admin",
@@ -27,37 +28,29 @@ const publicItems: NavigationItem[] = [
   },
 ];
 
-function getActiveValue(pathname: string, items: NavigationItem[]) {
-  const activeItem = items.find((item) => {
-    return pathname === item.href || pathname.startsWith(`${item.href}/`);
-  });
-  return activeItem?.value ?? items[0]?.value ?? "";
+function getActiveValue(pathname: string) {
+  const path = pathname.replace(/\/$/, "");
+  return ["/admin", "/admin/questions", "/admin/settings"].includes(path) ? "admin" : "";
 }
 
-function NavigationIcon({ value, active }: { value: string; active: boolean }) {
+function NavigationIcon({ value, active }: { value: NavigationItem["value"]; active: boolean }) {
   if (value === "ask") {
     return active ? <mdui-icon-add-comment slot="icon" /> : <mdui-icon-add-comment--outlined slot="icon" />;
   }
   if (value === "display") {
     return active ? <mdui-icon-question-answer slot="icon" /> : <mdui-icon-question-answer--outlined slot="icon" />;
   }
-  if (value === "admin") {
-    return active ? <mdui-icon-admin-panel-settings slot="icon" /> : <mdui-icon-admin-panel-settings--outlined slot="icon" />;
-  }
-  if (value === "questions") {
-    return active ? <mdui-icon-list slot="icon" /> : <mdui-icon-list--outlined slot="icon" />;
-  }
-  return active ? <mdui-icon-settings slot="icon" /> : <mdui-icon-settings--outlined slot="icon" />;
+  return active ? <mdui-icon-admin-panel-settings slot="icon" /> : <mdui-icon-admin-panel-settings--outlined slot="icon" />;
 }
 
 function NavigationItems({
   items,
-  rail,
+  sidebar,
   activeValue,
   onNavigate,
 }: {
   items: NavigationItem[];
-  rail: boolean;
+  sidebar: boolean;
   activeValue: string;
   onNavigate: (href: string) => void;
 }) {
@@ -65,25 +58,23 @@ function NavigationItems({
     <>
       {items.map((item) => {
         const active = activeValue === item.value;
-        if (rail) {
+        if (sidebar) {
           return (
-            <mdui-navigation-rail-item
+            <mdui-list-item
               key={item.value}
-              value={item.value}
-              role="link"
-              tabindex="0"
-              onClick={() => onNavigate(item.href)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onNavigate(item.href);
-                }
+              href={item.href}
+              active={active}
+              rounded
+              onClick={(event) => {
+                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                event.preventDefault();
+                onNavigate(item.href);
               }}
               aria-current={active ? "page" : undefined}
             >
               <NavigationIcon value={item.value} active={active} />
               {item.label}
-            </mdui-navigation-rail-item>
+            </mdui-list-item>
           );
         }
         return (
@@ -114,10 +105,15 @@ export function Navigation() {
   const items = publicItems;
   const pathname = usePathname();
   const router = useRouter();
-  const activeValue = getActiveValue(pathname, items);
+  const view = usePublicView();
+  const activeValue = pathname === "/" ? view : getActiveValue(pathname);
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
   function navigate(href: string) {
+    if (pathname === "/" && (href === "/" || href === "/#display")) {
+      navigatePublicView(href === "/#display" ? "display" : "ask");
+      return;
+    }
     if (pathname === href) return;
     router.push(href);
   }
@@ -127,12 +123,8 @@ export function Navigation() {
     import("@mdui/icons/add-comment--outlined.js");
     import("@mdui/icons/admin-panel-settings.js");
     import("@mdui/icons/admin-panel-settings--outlined.js");
-    import("@mdui/icons/list.js");
-    import("@mdui/icons/list--outlined.js");
     import("@mdui/icons/question-answer.js");
     import("@mdui/icons/question-answer--outlined.js");
-    import("@mdui/icons/settings.js");
-    import("@mdui/icons/settings--outlined.js");
 
     const media = window.matchMedia("(min-width: 769px)");
     const update = () => setIsDesktop(media.matches);
@@ -148,15 +140,15 @@ export function Navigation() {
   return (
     <nav aria-label="主导航">
       {isDesktop ? (
-        <div className="navigation-rail">
-          <mdui-navigation-rail value={activeValue} alignment="center" contained>
-            <NavigationItems items={items} rail activeValue={activeValue} onNavigate={navigate} />
-          </mdui-navigation-rail>
-        </div>
+        <aside className="navigation-sidebar">
+          <mdui-list>
+            <NavigationItems items={items} sidebar activeValue={activeValue} onNavigate={navigate} />
+          </mdui-list>
+        </aside>
       ) : (
         <div className="navigation-bar">
           <mdui-navigation-bar value={activeValue} label-visibility="labeled">
-            <NavigationItems items={items} rail={false} activeValue={activeValue} onNavigate={navigate} />
+            <NavigationItems items={items} sidebar={false} activeValue={activeValue} onNavigate={navigate} />
           </mdui-navigation-bar>
         </div>
       )}
